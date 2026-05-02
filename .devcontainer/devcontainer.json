@@ -2,8 +2,11 @@
     "name": "Android Build Environment",
     "image": "mcr.microsoft.com/devcontainers/java:17",
     "features": {
-        "ghcr.io/devcontainers/features/common-utils:1": {}
+        "ghcr.io/devcontainers/features/common-utils:1": {},
+        "ghcr.io/devcontainers/features/sshd:1": {
+            "version": "latest"
+        }
     },
-    "postCreateCommand": "echo 'Entorno listo para configurar el SDK de Android'"
+    "postCreateCommand": "echo 'Entorno con SSH listo'"
 }
 
