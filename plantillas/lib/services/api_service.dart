@@ -104,3 +104,18 @@ class ApiService {
       return [];
     }
   }
+  static Future<Map<String, dynamic>> enviarNotificacion(Map<String, dynamic> data) async {
+    data['token'] = _token;
+    return await post(ApiConfig.notificarEndpoint, data);
+  }
+
+  static Future<Map<String, dynamic>> getPerfil() async {
+    return await post(ApiConfig.perfilEndpoint, {'token': _token});
+  }
+
+  static Future<Map<String, dynamic>> verificarNotificador(String nombre, String password) async {
+    return await post(ApiConfig.verificarNotificadorEndpoint, {
+      'nombre': nombre, 'password': password, 'token': _token,
+    });
+  }
+}
