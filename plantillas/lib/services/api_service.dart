@@ -1,317 +1,223 @@
+// ============================================
+// SERVICIO DE API - COMUNICACION CON BACKEND
+// ============================================
+
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../config/api_config.dart';
 import '../models/usuario.dart';
 
 class ApiService {
-  // CAMBIAR ESTA URL POR LA DE TU SERVIDOR
-  static const String baseUrl = 'http://tarjeta de reporte.infinityfree.me/backend/api';
-  
-  String? _token;
-  
-  // Singleton
-  static final ApiService _instance = ApiService._internal();
-  factory ApiService() => _instance;
-  ApiService._internal();
-  
-  // Getters y setters del token
-  String? get token => _token;
-  set token(String? value) => _token = value;
-  
-  // Headers para requests autenticados
-  Map<String, String> get _headers => {
-    'Content-Type': 'application/x-www-form-urlencoded',
-    if (_token != null) 'Authorization': 'Bearer $_token',
-  };
-  
-  Map<String, String> get _jsonHeaders => {
-    'Content-Type': 'application/json',
-    if (_token != null) 'Authorization': 'Bearer $_token',
-  };
-  
-  // ==================== AUTENTICACIÓN ====================
-  
-  Future<Map<String, dynamic>> login(String ci, String password) async {
+  static String? _token;
+  static Usuario? _usuario;
+
+  // ============================================
+  // GETTERS
+  // ============================================
+  static String? get token => _token;
+  static Usuario? get usuario => _usuario;
+  static bool get isLoggedIn => _token != null && _token!.isNotEmpty;
+
+  // ============================================
+  // INICIALIZAR SESION DESDE ALMACENAMIENTO
+  // ============================================
+  static Future<bool> initSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    _token = prefs.getString('token');
+    final usuarioJson = prefs.getString('usuario');
+
+    if (_token != null && usuarioJson != null) {
+      _usuario = Usuario.fromJson(jsonDecode(usuarioJson));
+      return true;
+    }
+    return false;
+  }
+
+  // ============================================
+  // GUARDAR SESION
+  // ============================================
+  static Future<void> saveSession(String token, Usuario usuario) async {
+    _token = token;
+    _usuario = usuario;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('token', token);
+    await prefs.setString('usuario', jsonEncode(usuario.toJson()));
+  }
+
+  // ============================================
+  // CERRAR SESION
+  // ============================================
+  static Future<void> logout() async {
+    _token = null;
+    _usuario = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+  }
+
+  // ============================================
+  // HEADERS
+  // ============================================
+  static Map<String, String> get headers => {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+
+  // ============================================
+  // POST GENERICO
+  // ============================================
+  static Future<Map<String, dynamic>> post(
+      String endpoint, Map<String, dynamic> data) async {
     try {
+      final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
       final response = await http.post(
-        Uri.parse('$baseUrl/auth.php'),
-        body: {'accion': 'login', 'ci': ci, 'password': password},
+        url,
+        headers: headers,
+        body: jsonEncode(data),
       );
-      
-      final data = json.decode(response.body);
-      
-      if (data['success'] == true) {
-        _token = data['data']['token'];
-        return data;
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
       } else {
-        throw Exception(data['message'] ?? 'Error al iniciar sesión');
+        return {
+          'success': false,
+          'message': 'Error del servidor: ${response.statusCode}',
+        };
       }
     } catch (e) {
-      throw Exception('Error de conexión: ${e.toString()}');
+      return {
+        'success': false,
+        'message': 'Error de conexion: $e',
+      };
     }
   }
-  
-  Future<Map<String, dynamic>> loginQR(String qrData) async {
+
+  // ============================================
+  // GET GENERICO
+  // ============================================
+  static Future<Map<String, dynamic>> get(String endpoint,
+      {Map<String, String>? params}) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/auth.php'),
-        body: {'accion': 'login_qr', 'qr_data': qrData},
-      );
-      
-      final data = json.decode(response.body);
-      
-      if (data['success'] == true) {
-        _token = data['data']['token'];
-        return data;
-      } else {
-        throw Exception(data['message'] ?? 'Error al iniciar sesión con QR');
+      var url = '${ApiConfig.baseUrl}$endpoint';
+      if (params != null) {
+        url += '?${Uri(queryParameters: params).query}';
       }
-    } catch (e) {
-      throw Exception('Error de conexión: ${e.toString()}');
-    }
-  }
-  
-  Future<void> logout() async {
-    try {
-      await http.post(
-        Uri.parse('$baseUrl/auth.php'),
-        headers: _headers,
-        body: {'accion': 'logout'},
-      );
-      _token = null;
-    } catch (e) {
-      _token = null;
-    }
-  }
-  
-  Future<bool> verificarSesion() async {
-    try {
-      if (_token == null) return false;
-      
-      final response = await http.get(
-        Uri.parse('$baseUrl/auth.php?accion=verificar_sesion'),
-        headers: _headers,
-      );
-      
-      final data = json.decode(response.body);
-      return data['success'] == true;
-    } catch (e) {
-      return false;
-    }
-  }
-  
-  // ==================== DASHBOARD ====================
-  
-  Future<Map<String, dynamic>> obtenerDatosDashboard() async {
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/dashboard.php?accion=obtener_datos'),
-        headers: _headers,
-      );
-      
-      final data = json.decode(response.body);
-      
-      if (data['success'] == true) {
-        return data['data'];
-      } else {
-        throw Exception(data['message'] ?? 'Error al obtener datos');
-      }
-    } catch (e) {
-      throw Exception('Error de conexión: ${e.toString()}');
-    }
-  }
-  
-  Future<List<EstudianteBusqueda>> buscarEstudiante(String termino) async {
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/dashboard.php?accion=buscar_estudiante&q=$termino'),
-        headers: _headers,
-      );
-      
-      final data = json.decode(response.body);
-      
-      if (data['success'] == true) {
-        List<dynamic> resultados = data['data'];
-        return resultados.map((e) => EstudianteBusqueda.fromJson(e)).toList();
-      } else {
-        return [];
-      }
-    } catch (e) {
-      return [];
-    }
-  }
-  
-  Future<List<Actividad>> obtenerActividades({
-    String filtro = 'semana',
-    String tipo = 'todas',
-  }) async {
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/dashboard.php?accion=obtener_actividades&filtro=$filtro&tipo=$tipo'),
-        headers: _headers,
-      );
-      
-      final data = json.decode(response.body);
-      
-      if (data['success'] == true) {
-        List<dynamic> actividades = data['data'];
-        return actividades.map((e) => Actividad.fromJson(e)).toList();
-      } else {
-        return [];
-      }
-    } catch (e) {
-      return [];
-    }
-  }
-  
-  Future<void> marcarTutorialVisto() async {
-    try {
-      await http.post(
-        Uri.parse('$baseUrl/dashboard.php'),
-        headers: _jsonHeaders,
-        body: json.encode({'accion': 'marcar_tutorial_visto'}),
-      );
-    } catch (e) {
-      // Ignorar errores
-    }
-  }
-  
-  // ==================== NOTIFICACIONES ====================
-  
-  Future<Map<String, dynamic>> obtenerCatalogos() async {
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/notificaciones.php?accion=obtener_catalogos'),
-        headers: _headers,
-      );
-      
-      final data = json.decode(response.body);
-      
-      if (data['success'] == true) {
-        return data['data'];
-      } else {
-        throw Exception(data['message'] ?? 'Error al obtener catálogos');
-      }
-    } catch (e) {
-      throw Exception('Error de conexión: ${e.toString()}');
-    }
-  }
-  
-  Future<Map<String, dynamic>> crearNotificacion({
-    required List<Map<String, dynamic>> destinatarios,
-    required List<Map<String, dynamic>> actividades,
-    required String fecha,
-    required String hora,
-    String observaciones = '',
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/notificaciones.php'),
-        headers: _headers,
-        body: {
-          'accion': 'crear_notificacion',
-          'destinatarios': json.encode(destinatarios),
-          'actividades': json.encode(actividades),
-          'fecha': fecha,
-          'hora': hora,
-          'observaciones': observaciones,
-        },
-      );
-      
-      final data = json.decode(response.body);
-      
-      if (data['success'] == true) {
-        return data;
-      } else {
-        throw Exception(data['message'] ?? 'Error al crear notificación');
-      }
-    } catch (e) {
-      throw Exception('Error de conexión: ${e.toString()}');
-    }
-  }
-  
-  Future<void> guardarAlegacion(int actividadId, String alegacion) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/notificaciones.php'),
-        headers: _headers,
-        body: {
-          'accion': 'guardar_alegacion',
-          'actividad_id': actividadId.toString(),
-          'alegacion': alegacion,
-        },
-      );
-      
-      final data = json.decode(response.body);
-      
-      if (data['success'] != true) {
-        throw Exception(data['message'] ?? 'Error al guardar alegación');
-      }
-    } catch (e) {
-      throw Exception('Error de conexión: ${e.toString()}');
-    }
-  }
-  
-  Future<List<CatalogoItem>> buscarActividad(String termino, String tipo) async {
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/notificaciones.php?accion=buscar_actividad&q=$termino&tipo=$tipo'),
-        headers: _headers,
-      );
-      
-      final data = json.decode(response.body);
-      
-      if (data['success'] == true) {
-        List<dynamic> resultados = data['data'];
-        return resultados.map((e) => CatalogoItem.fromJson(e)).toList();
-      } else {
-        return [];
-      }
-    } catch (e) {
-      return [];
-    }
-  }
-  
-  // ==================== HORARIOS ====================
-  
-  Future<Map<String, dynamic>> obtenerHorario({String? grado, int? peloton}) async {
-    try {
-      String url = '$baseUrl/horarios.php?accion=obtener_horario';
-      if (grado != null) url += '&grado=$grado';
-      if (peloton != null) url += '&peloton=$peloton';
-      
       final response = await http.get(
         Uri.parse(url),
-        headers: _headers,
+        headers: headers,
       );
-      
-      final data = json.decode(response.body);
-      
-      if (data['success'] == true) {
-        return data['data'];
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
       } else {
-        throw Exception(data['message'] ?? 'Error al obtener horario');
+        return {
+          'success': false,
+          'message': 'Error del servidor: ${response.statusCode}',
+        };
       }
     } catch (e) {
-      throw Exception('Error de conexión: ${e.toString()}');
+      return {
+        'success': false,
+        'message': 'Error de conexion: $e',
+      };
     }
   }
   
-  Future<AsignaturaActual?> obtenerAsignaturaActual() async {
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/horarios.php?accion=obtener_asignatura_actual'),
-        headers: _headers,
-      );
-      
-      final data = json.decode(response.body);
-      
-      if (data['success'] == true && data['data'] != null) {
-        return AsignaturaActual.fromJson(data['data']);
-      } else {
-        return null;
-      }
-    } catch (e) {
-      return null;
+    // ============================================
+  // LOGIN
+  // ============================================
+  static Future<Map<String, dynamic>> login(
+    String nombre,
+    String apellidos,
+    String password,
+    String cargo,
+  ) async {
+    final response = await post(ApiConfig.loginEndpoint, {
+      'nombre': nombre,
+      'apellidos': apellidos,
+      'password': password,
+      'cargo': cargo,
+    });
+
+    if (response['success'] == true) {
+      final usuario = Usuario.fromJson(response['usuario']);
+      await saveSession(response['token'], usuario);
     }
+
+    return response;
+  }
+
+  // ============================================
+  // VERIFICAR TOKEN
+  // ============================================
+  static Future<bool> verificarToken() async {
+    if (_token == null) return false;
+    final response = await post(ApiConfig.verificarTokenEndpoint, {
+      'token': _token,
+    });
+    return response['valid'] == true;
+  }
+
+  // ============================================
+  // DATOS DEL DASHBOARD
+  // ============================================
+  static Future<Map<String, dynamic>> getDashboard() async {
+    return await post(ApiConfig.dashboardEndpoint, {
+      'token': _token,
+    });
+  }
+
+  // ============================================
+  // BUSCAR ESTUDIANTES
+  // ============================================
+  static Future<List<dynamic>> buscarEstudiantes(String query) async {
+    final response = await get(
+      ApiConfig.buscarEndpoint,
+      params: {'q': query, 'token': _token ?? ''},
+    );
+    if (response is List) return response;
+    return [];
+  }
+
+  // ============================================
+  // OBTENER CATALOGOS
+  // ============================================
+  static Future<List<dynamic>> getCatalogo(String tipo) async {
+    final response = await get(
+      ApiConfig.catalogoEndpoint,
+      params: {'tipo': tipo, 'token': _token ?? ''},
+    );
+    if (response is List) return response;
+    return [];
+  }
+
+  // ============================================
+  // ENVIAR NOTIFICACION
+  // ============================================
+  static Future<Map<String, dynamic>> enviarNotificacion(
+      Map<String, dynamic> data) async {
+    data['token'] = _token;
+    return await post(ApiConfig.notificarEndpoint, data);
+  }
+
+  // ============================================
+  // OBTENER PERFIL
+  // ============================================
+  static Future<Map<String, dynamic>> getPerfil() async {
+    return await post(ApiConfig.perfilEndpoint, {
+      'token': _token,
+    });
+  }
+
+  // ============================================
+  // VERIFICAR CUENTA TEMPORAL
+  // ============================================
+  static Future<Map<String, dynamic>> verificarNotificador(
+      String nombre, String password) async {
+    return await post(ApiConfig.verificarNotificadorEndpoint, {
+      'nombre': nombre,
+      'password': password,
+      'token': _token,
+    });
   }
 }

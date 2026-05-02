@@ -1,5 +1,5 @@
-name: emcc_digital
-description: Sistema de Gestión Escolar EMCC Digital - Aplicación Móvil
+name: sistema_escolar
+description: Sistema de Gestion Escolar - Frontend Flutter
 
 publish_to: 'none'
 
@@ -12,26 +12,20 @@ dependencies:
   flutter:
     sdk: flutter
   
-  # HTTP requests
-  http: ^1.1.0
-  
-  # QR Code scanning
-  mobile_scanner: ^3.5.5
-  
-  # QR Code generation
-  qr_flutter: ^4.1.0
-  
-  # Local storage
-  shared_preferences: ^2.2.2
-  
-  # Icons
+  # Iconos
   cupertino_icons: ^1.0.6
   
-  # Date formatting
-  intl: ^0.18.1
+  # Peticiones HTTP
+  http: ^1.1.0
   
-  # Image picker (for profile)
-  image_picker: ^1.0.5
+  # Almacenamiento local
+  shared_preferences: ^2.2.2
+  
+  # QR Scanner
+  mobile_scanner: ^3.5.7
+  
+  # QR Generator
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:
@@ -40,9 +34,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  
-  assets:
-    - assets/images/
   
   fonts:
     - family: Poppins
