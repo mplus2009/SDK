@@ -1,7 +1,3 @@
-// ============================================
-// MODELO DE USUARIO
-// ============================================
-
 class Usuario {
   final int id;
   final String nombre;
@@ -40,14 +36,9 @@ class Usuario {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'nombre': nombre,
-      'apellidos': apellidos,
-      'ci': ci,
-      'cargo': cargo,
-      'ocupacion': ocupacion,
-      'grado': grado,
-      'peloton': peloton,
+      'id': id, 'nombre': nombre, 'apellidos': apellidos,
+      'ci': ci, 'cargo': cargo, 'ocupacion': ocupacion,
+      'grado': grado, 'peloton': peloton,
     };
   }
 }
