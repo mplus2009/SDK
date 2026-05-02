@@ -1,0 +1,9 @@
+{
+    "name": "Android Build Environment",
+    "image": "mcr.microsoft.com/devcontainers/java:17",
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:1": {}
+    },
+    "postCreateCommand": "echo 'Entorno listo para configurar el SDK de Android'"
+}
+
