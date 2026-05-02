@@ -93,9 +93,9 @@ class ApiService {
   }
 
   // ============================================
-  // GET GENERICO
+  // GET GENERICO (CORREGIDO)
   // ============================================
-  static Future<Map<String, dynamic>> get(String endpoint,
+  static Future<dynamic> getRaw(String endpoint,
       {Map<String, String>? params}) async {
     try {
       var url = '${ApiConfig.baseUrl}$endpoint';
@@ -109,21 +109,14 @@ class ApiService {
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
-      } else {
-        return {
-          'success': false,
-          'message': 'Error del servidor: ${response.statusCode}',
-        };
       }
+      return null;
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'Error de conexion: $e',
-      };
+      return null;
     }
   }
-  
-    // ============================================
+
+  // ============================================
   // LOGIN
   // ============================================
   static Future<Map<String, dynamic>> login(
@@ -168,27 +161,57 @@ class ApiService {
   }
 
   // ============================================
-  // BUSCAR ESTUDIANTES
+  // BUSCAR ESTUDIANTES (CORREGIDO)
   // ============================================
   static Future<List<dynamic>> buscarEstudiantes(String query) async {
-    final response = await get(
-      ApiConfig.buscarEndpoint,
-      params: {'q': query, 'token': _token ?? ''},
-    );
-    if (response is List) return response;
-    return [];
+    try {
+      var url = '${ApiConfig.baseUrl}${ApiConfig.buscarEndpoint}';
+      url += '?q=${Uri.encodeComponent(query)}&token=${_token ?? ''}';
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is List) {
+          return decoded;
+        } else if (decoded is Map && decoded.containsKey('resultados')) {
+          return decoded['resultados'] as List<dynamic>;
+        }
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
   }
 
   // ============================================
-  // OBTENER CATALOGOS
+  // OBTENER CATALOGOS (CORREGIDO)
   // ============================================
   static Future<List<dynamic>> getCatalogo(String tipo) async {
-    final response = await get(
-      ApiConfig.catalogoEndpoint,
-      params: {'tipo': tipo, 'token': _token ?? ''},
-    );
-    if (response is List) return response;
-    return [];
+    try {
+      var url = '${ApiConfig.baseUrl}${ApiConfig.catalogoEndpoint}';
+      url += '?tipo=$tipo&token=${_token ?? ''}';
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is List) {
+          return decoded;
+        } else if (decoded is Map && decoded.containsKey('resultados')) {
+          return decoded['resultados'] as List<dynamic>;
+        }
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
   }
 
   // ============================================
