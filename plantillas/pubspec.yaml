@@ -1,9 +1,9 @@
 name: sistema_escolar
-description: Sistema de Gestion Escolar - Frontend Flutter
+description: Sistema de Gestión Escolar EMCC - Modo P2P sin servidor
 
 publish_to: 'none'
 
-version: 1.1.0+1
+version: 2.0.0+1
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -13,10 +13,24 @@ dependencies:
     sdk: flutter
   
   cupertino_icons: ^1.0.6
-  http: ^1.1.0
+  
+  # Base de datos local
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  
+  # Utilidades
   shared_preferences: ^2.2.2
+  intl: ^0.18.1
+  path_provider: ^2.1.1
+  
+  # QR
   mobile_scanner: ^3.5.7
   qr_flutter: ^4.1.0
+  
+  # P2P
+  wifi_direct: ^0.0.1
+  connectivity_plus: ^5.0.2
+  permission_handler: ^11.1.0
 
 dev_dependencies:
   flutter_test:
