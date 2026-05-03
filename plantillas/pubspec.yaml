@@ -13,23 +13,17 @@ dependencies:
     sdk: flutter
   
   cupertino_icons: ^1.0.6
-  
-  # Base de datos local
   sqflite: ^2.3.0
   path: ^1.8.3
-  
-  # Utilidades
   shared_preferences: ^2.2.2
-  intl: ^0.18.1
   path_provider: ^2.1.1
-  
-  # QR
   mobile_scanner: ^3.5.7
   qr_flutter: ^4.1.0
-  
-  # P2P
   connectivity_plus: ^5.0.2
   permission_handler: ^11.1.0
+  flutter_local_notifications: ^17.0.0
+  workmanager: ^0.5.2
+  flutter_background_service: ^5.0.5
 
 dev_dependencies:
   flutter_test:
@@ -41,6 +35,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon/
+    - assets/data/usuario_use.sql
 
 flutter_launcher_icons:
   android: true

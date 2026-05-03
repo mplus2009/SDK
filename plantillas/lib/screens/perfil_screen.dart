@@ -1,14 +1,8 @@
-// ============================================
-// PANTALLA DE PERFIL
-// ============================================
-
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
-import '../models/usuario.dart';
+import '../services/database_service.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
-
   @override
   State<PerfilScreen> createState() => _PerfilScreenState();
 }
@@ -26,7 +20,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
   Future<void> _cargarPerfil() async {
     setState(() { _isLoading = true; _error = null; });
-    final response = await ApiService.getPerfil();
+    final response = await DatabaseService.getPerfil();
     if (!mounted) return;
     if (response['success'] == true) {
       setState(() { _perfilData = response; _isLoading = false; });
@@ -37,11 +31,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final usuario = ApiService.usuario;
+    final usuario = DatabaseService.usuario;
     final perfil = _perfilData?['perfil'] as Map<String, dynamic>?;
     final stats = _perfilData?['stats'] as Map<String, dynamic>?;
-    final meritosCat = (_perfilData?['meritos_por_categoria'] as List<dynamic>?) ?? [];
-    final demeritosCat = (_perfilData?['demeritos_por_categoria'] as List<dynamic>?) ?? [];
     final ultimas = (_perfilData?['ultimas_actividades'] as List<dynamic>?) ?? [];
     final balance = (stats?['meritos'] ?? 0) - (stats?['demeritos'] ?? 0);
 
@@ -56,7 +48,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
                     child: Column(children: [
-                      // Avatar y nombre
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
@@ -67,19 +58,11 @@ class _PerfilScreenState extends State<PerfilScreen> {
                           const SizedBox(height: 5),
                           Container(padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5), decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(20)), child: Text(perfil?['cargo'] ?? usuario?.cargo ?? '', style: const TextStyle(color: Color(0xFF64748B)))),
                           if (usuario?.cargo == 'estudiante') ...[
-                            const SizedBox(height: 15),
-                            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                              _buildDetalle(Icons.school, '${perfil?['grado'] ?? ''}'),
-                              const SizedBox(width: 20),
-                              _buildDetalle(Icons.group, 'Peloton ${perfil?['peloton'] ?? '?'}'),
-                              const SizedBox(width: 20),
-                              _buildDetalle(Icons.badge, 'CI: ${perfil?['ci'] ?? ''}'),
-                            ]),
                             const SizedBox(height: 20),
                             Row(children: [
-                              _buildStatBox('${stats?['meritos'] ?? 0}', 'Meritos', const Color(0xFF10B981), Icons.emoji_events),
+                              _buildStatBox('${stats?['meritos'] ?? 0}', 'Méritos', const Color(0xFF10B981), Icons.emoji_events),
                               const SizedBox(width: 10),
-                              _buildStatBox('${stats?['demeritos'] ?? 0}', 'Demeritos', const Color(0xFFEF4444), Icons.warning_amber),
+                              _buildStatBox('${stats?['demeritos'] ?? 0}', 'Deméritos', const Color(0xFFEF4444), Icons.warning_amber),
                               const SizedBox(width: 10),
                               _buildStatBox('$balance', 'Balance', balance >= 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444), Icons.balance),
                             ]),
@@ -89,12 +72,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
                         ]),
                       ),
                       const SizedBox(height: 20),
-                      if (usuario?.cargo == 'estudiante') ...[
-                        _buildCategoriaSection('Meritos por Categoria', meritosCat, true),
-                        const SizedBox(height: 20),
-                        _buildCategoriaSection('Demeritos por Categoria', demeritosCat, false),
-                        const SizedBox(height: 20),
-                      ],
                       _buildUltimasActividades(ultimas),
                     ]),
                   ),
@@ -102,15 +79,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
     );
   }
 
-  Widget _buildDetalle(IconData icon, String text) {
-    return Row(children: [Icon(icon, size: 16, color: const Color(0xFF667EEA)), const SizedBox(width: 4), Text(text, style: const TextStyle(color: Color(0xFF64748B), fontSize: 14))]);
-  }
-
   Widget _buildStatBox(String value, String label, Color color, IconData icon) {
     return Expanded(
       child: Container(padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(16)), child: Column(children: [
-        Icon(icon, size: 28, color: color),
-        const SizedBox(height: 8),
+        Icon(icon, size: 28, color: color), const SizedBox(height: 8),
         Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: color)),
         Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
       ])),
@@ -119,35 +91,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
   Widget _buildMensajeEstado(int balance) {
     Color bg; IconData icon; String title; String msg;
-    if (balance > 0) { bg = const Color(0xFF10B981); icon = Icons.emoji_events; title = 'Excelente!'; msg = 'Tienes mas meritos que demeritos. Sigue asi!'; }
-    else if (balance < 0) { bg = const Color(0xFFEF4444); icon = Icons.warning_amber; title = 'Atencion'; msg = 'Tienes mas demeritos que meritos. Esfuerzate mas!'; }
-    else { bg = const Color(0xFFF59E0B); icon = Icons.balance; title = 'Equilibrado'; msg = 'Tus meritos y demeritos estan igualados.'; }
+    if (balance > 0) { bg = const Color(0xFF10B981); icon = Icons.emoji_events; title = '¡Excelente!'; msg = 'Tienes más méritos que deméritos. ¡Sigue así!'; }
+    else if (balance < 0) { bg = const Color(0xFFEF4444); icon = Icons.warning_amber; title = 'Atención'; msg = 'Tienes más deméritos que méritos. ¡Esfuérzate más!'; }
+    else { bg = const Color(0xFFF59E0B); icon = Icons.balance; title = 'Equilibrado'; msg = 'Tus méritos y deméritos están igualados.'; }
     return Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(gradient: LinearGradient(colors: [bg, bg.withOpacity(0.8)]), borderRadius: BorderRadius.circular(20)), child: Column(children: [Icon(icon, size: 40, color: Colors.white), const SizedBox(height: 10), Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)), const SizedBox(height: 5), Text(msg, style: const TextStyle(color: Colors.white70, fontSize: 14))]));
-  }
-    Widget _buildCategoriaSection(String title, List<dynamic> items, bool esMerito) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Icon(esMerito ? Icons.emoji_events : Icons.warning_amber, color: esMerito ? const Color(0xFF10B981) : const Color(0xFFEF4444)),
-          const SizedBox(width: 8),
-          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF1E3C72))),
-        ]),
-        const SizedBox(height: 16),
-        if (items.isEmpty)
-          const Center(child: Padding(padding: EdgeInsets.all(20), child: Text('No hay registros', style: TextStyle(color: Color(0xFF94A3B8)))))
-        else
-          ...items.map((cat) => Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0)))),
-            child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text(cat['categoria'] ?? '', style: const TextStyle(color: Color(0xFF1E293B))),
-              Text('${esMerito ? "+" : "-"}${cat['total']}', style: TextStyle(fontWeight: FontWeight.w700, color: esMerito ? const Color(0xFF10B981) : const Color(0xFFEF4444))),
-            ]),
-          )),
-      ]),
-    );
   }
 
   Widget _buildUltimasActividades(List<dynamic> actividades) {
@@ -155,7 +102,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Row(children: [Icon(Icons.history, color: Color(0xFF667EEA)), SizedBox(width: 8), Text('Ultimas Actividades', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF1E3C72)))]),
+        const Row(children: [Icon(Icons.history, color: Color(0xFF667EEA)), SizedBox(width: 8), Text('Últimas Actividades', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF1E3C72)))]),
         const SizedBox(height: 16),
         if (actividades.isEmpty)
           const Center(child: Padding(padding: EdgeInsets.all(20), child: Text('No hay actividades recientes', style: TextStyle(color: Color(0xFF94A3B8)))))
