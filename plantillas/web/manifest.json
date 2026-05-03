@@ -1,6 +1,6 @@
 {
-    "name": "plantillas",
-    "short_name": "plantillas",
+    "name": "plantillas_nuevo",
+    "short_name": "plantillas_nuevo",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
