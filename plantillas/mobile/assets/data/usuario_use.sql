@@ -1,0 +1,840 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.3
+-- https://www.phpmyadmin.net/
+--
+-- Servidor: localhost
+-- Tiempo de generación: 03-05-2026 a las 14:11:23
+-- Versión del servidor: 5.7.34
+-- Versión de PHP: 8.2.29
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Base de datos: `usuario_use`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `actividad`
+--
+
+CREATE TABLE `actividad` (
+  `id` int(11) NOT NULL,
+  `id_star` int(11) NOT NULL COMMENT 'ID de quien registra (profesor/oficial/directiva)',
+  `id_end` int(11) NOT NULL COMMENT 'ID del estudiante que recibe el mérito/demérito',
+  `tipo` enum('merito','demerito') COLLATE utf8_spanish_ci NOT NULL COMMENT 'Tipo de actividad: mérito o demérito',
+  `categoria` varchar(100) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Categoría de la falta o mérito',
+  `falta_causa` varchar(255) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Descripción de la falta o causa del mérito',
+  `cantidad` int(11) NOT NULL COMMENT 'Cantidad de méritos o deméritos asignados',
+  `fecha` date NOT NULL COMMENT 'Fecha del suceso',
+  `hora` time NOT NULL COMMENT 'Hora del suceso',
+  `leido` tinyint(1) NOT NULL DEFAULT '0' COMMENT '0 = No leído, 1 = Leído',
+  `observaciones` text COLLATE utf8_spanish_ci COMMENT 'Observaciones adicionales',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `asignaturas`
+--
+
+CREATE TABLE `asignaturas` (
+  `id` int(11) NOT NULL,
+  `nombre` varchar(100) COLLATE utf8_spanish_ci NOT NULL,
+  `abreviatura` varchar(10) COLLATE utf8_spanish_ci NOT NULL,
+  `color_default` varchar(7) COLLATE utf8_spanish_ci DEFAULT '#e8f0fe'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `asignaturas`
+--
+
+INSERT INTO `asignaturas` (`id`, `nombre`, `abreviatura`, `color_default`) VALUES
+(1, 'Matemática', 'MAT', '#e8f0fe'),
+(2, 'Historia de Cuba', 'HIST', '#fef3c7'),
+(3, 'Física', 'FIS', '#d1fae5'),
+(4, 'Química', 'QUIM', '#fee2e2'),
+(5, 'Inglés', 'ING', '#e0e7ff'),
+(6, 'Literatura y Lengua', 'LIT', '#fce7f3'),
+(7, 'Preparación Física', 'EF', '#dcfce7'),
+(8, 'Cultura Política', 'CP', '#fef9c3'),
+(9, 'Preparación Ciudadana', 'PC', '#ffedd5'),
+(10, 'Informática', 'INF', '#cffafe'),
+(11, 'Biología', 'BIO', '#ccfbf1'),
+(12, 'Geografía', 'GEO', '#f1f5f9');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `demeritos`
+--
+
+CREATE TABLE `demeritos` (
+  `id` int(11) NOT NULL,
+  `categoria` varchar(100) COLLATE utf8_spanish_ci NOT NULL COMMENT 'FORMACIÓN ÉTICA, CUARTEL, UNIFORME, etc.',
+  `subcategoria` varchar(100) COLLATE utf8_spanish_ci DEFAULT NULL COMMENT 'SERVICIO DE GUARDIA, DURANTE LA MARCHA, etc.',
+  `falta` varchar(255) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Descripción de la falta',
+  `demeritos_10mo` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Rango de deméritos para 10mo grado (ej: 1-3, 4-6, 6-11)',
+  `demeritos_11_12` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Rango de deméritos para 11no y 12mo grados',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `demeritos`
+--
+
+INSERT INTO `demeritos` (`id`, `categoria`, `subcategoria`, `falta`, `demeritos_10mo`, `demeritos_11_12`, `created_at`) VALUES
+(1, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'No rendir cortesía', '1-3', '4-8', '2026-04-11 20:32:23'),
+(2, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Saludar incorrectamente', '1', '1-3', '2026-04-11 20:32:23'),
+(3, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Permitir', '2-5', '6-11', '2026-04-11 20:32:23'),
+(4, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Tibieza', '1-2', '3-5', '2026-04-11 20:32:23'),
+(5, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Ausente a formación', '1-3', '2-5', '2026-04-11 20:32:23'),
+(6, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Ausente al regreso de pase', '6-11', '6-11', '2026-04-11 20:32:23'),
+(7, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Ausente al cuartel', '1-3', '1-5', '2026-04-11 20:32:23'),
+(8, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Mentir', '4-6', '6-11', '2026-04-11 20:32:23'),
+(9, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Incumplir una orden', '4-6', '6-11', '2026-04-11 20:32:23'),
+(10, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Réplica', '2-4', '6-11', '2026-04-11 20:32:23'),
+(11, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Faltar el respeto', '4-6', '6-11', '2026-04-11 20:32:23'),
+(12, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Atribuciones indebidas', '1-3', '1-5', '2026-04-11 20:32:23'),
+(13, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Estar peludo o pelado de forma no reglamentaria', '1-2', '2-4', '2026-04-11 20:32:23'),
+(14, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Estar sin afeitar o mal afeitado', '1-2', '2-4', '2026-04-11 20:32:23'),
+(15, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Recostarse a la pared, sentarse en lugares no apropiados', '1-2', '2-4', '2026-04-11 20:32:23'),
+(16, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Terminología inadecuada', '1-2', '2-4', '2026-04-11 20:32:59'),
+(17, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Palabras obscenas', '4-6', '6-10', '2026-04-11 20:32:59'),
+(18, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Reñir con un compañero', '6-11', '6-11', '2026-04-11 20:32:59'),
+(19, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Tener uñas largas o sucias', '1', '2', '2026-04-11 20:32:59'),
+(20, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Criticar la actuación o la orden de un superior', '2-4', '5-8', '2026-04-11 20:32:59'),
+(21, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'No presentarse al jefe después de cumplir una orden', '2-4', '5-8', '2026-04-11 20:32:59'),
+(22, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Presentarse incorrectamente ante el Jefe', '1-3', '4-6', '2026-04-11 20:32:59'),
+(23, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'No rendir el parte correctamente', '1-2', '2-4', '2026-04-11 20:32:59'),
+(24, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Incumplir el horario de la unidad', '2-5', '2-5', '2026-04-11 20:32:59'),
+(25, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Arrojar basura fuera de los depósitos', '1-3', '1-3', '2026-04-11 20:32:59'),
+(26, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Mantener las manos en los bolsillos', '1-2', '2-4', '2026-04-11 20:32:59'),
+(27, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Desconocer lo que está reglamentado', '1-2', '2-5', '2026-04-11 20:32:59'),
+(28, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Estar desnudo en el dormitorio', '1-3', '3-5', '2026-04-11 20:32:59'),
+(29, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Hacer necesidades fisiológicas en lugares no dispuestos', '2-4', '4-6', '2026-04-11 20:32:59'),
+(30, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Dirigirse de forma incorrecta a sus compañeros', '1-3', '3-5', '2026-04-11 20:32:59'),
+(31, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'No emplear el conducto reglamentario o emplearlo incorrectamente', '1-2', '3-5', '2026-04-11 20:33:22'),
+(32, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Llegar a la EMCC en estado de embriaguez', '6-11', '6-11', '2026-04-11 20:33:22'),
+(33, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Ingerir o introducir bebidas alcohólicas en la EMCC', '6-11', '6-11', '2026-04-11 20:33:22'),
+(34, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Falsificar documentos', '6-11', '6-11', '2026-04-11 20:33:22'),
+(35, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Realizar actos que atenten contra la moral y el prestigio de la EMCC', '6-11', '6-11', '2026-04-11 20:33:22'),
+(36, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Gesticular', '1-2', '2-5', '2026-04-11 20:33:22'),
+(37, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Difamar', '6-11', '6-11', '2026-04-11 20:33:22'),
+(38, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Entrar o salir de la EMCC por lugares no autorizados', '6-11', '6-11', '2026-04-11 20:33:22'),
+(39, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Encubrir', '6-11', '6-11', '2026-04-11 20:33:22'),
+(40, 'OTRAS FALTAS', NULL, 'No comportarse correctamente en el teatro', '1-3', '4-6', '2026-04-11 20:33:51'),
+(41, 'OTRAS FALTAS', NULL, 'Uso de prendas no autorizadas', '1-3', '3-5', '2026-04-11 20:33:51'),
+(42, 'OTRAS FALTAS', NULL, 'Peinados no autorizados', '1-3', '3-5', '2026-04-11 20:33:51'),
+(43, 'OTRAS FALTAS', NULL, 'Formar desorden o no cumplir las normas de convivencia social', '6-11', '6-11', '2026-04-11 20:33:51'),
+(44, 'OTRAS FALTAS', NULL, 'Tirar objeto a la población', '6-11', '6-11', '2026-04-11 20:33:51'),
+(45, 'OTRAS FALTAS', NULL, 'Bajarse del carro sin autorización', '1-3', '2-4', '2026-04-11 20:33:51'),
+(46, 'OTRAS FALTAS', NULL, 'Incumplir las regulaciones previstas para lugares públicos', '2-4', '5-7', '2026-04-11 20:33:51'),
+(47, 'RELACIONADAS CON EL CUARTEL', NULL, 'No estar listo para la inspección', '1-2', '2-4', '2026-04-11 20:34:12'),
+(48, 'RELACIONADAS CON EL CUARTEL', NULL, 'Objeto en lugar no dispuesto', '1-2', '1-2', '2026-04-11 20:34:12'),
+(49, 'RELACIONADAS CON EL CUARTEL', NULL, 'Objeto sucio o con polvo', '1-2', '1-2', '2026-04-11 20:34:12'),
+(50, 'RELACIONADAS CON EL CUARTEL', NULL, 'Objeto con falta de simetría, desalineados o desordenados', '1-2', '1-2', '2026-04-11 20:34:12'),
+(51, 'RELACIONADAS CON EL CUARTEL', NULL, 'Objetos sin marcar', '1-2', '2-4', '2026-04-11 20:34:12'),
+(52, 'RELACIONADAS CON EL CUARTEL', NULL, 'Cama mal tendida', '1-2', '1-2', '2026-04-11 20:34:12'),
+(53, 'RELACIONADAS CON EL CUARTEL', NULL, 'Área sucia', '1-2', '2-4', '2026-04-11 20:34:12'),
+(54, 'RELACIONADAS CON EL CUARTEL', NULL, 'Tener prendas no autorizadas en el cuartel', '2', '2', '2026-04-11 20:34:12'),
+(55, 'RELACIONADAS CON EL CUARTEL', NULL, 'Hablar en voz alta', '1', '1', '2026-04-11 20:34:12'),
+(56, 'RELACIONADAS CON EL CUARTEL', NULL, 'Escandalizar', '3', '3', '2026-04-11 20:34:12'),
+(57, 'RELACIONADAS CON EL CUARTEL', NULL, 'Interrumpir el sueño de los demás', '3', '3', '2026-04-11 20:34:12'),
+(58, 'ESTAR ACOSTADO', NULL, 'Fuera del horario establecido', '3', '3', '2026-04-11 20:34:32'),
+(59, 'ESTAR ACOSTADO', NULL, 'Con ropa no autorizada', '2', '2', '2026-04-11 20:34:32'),
+(60, 'SERVICIO DE CUARTEL', NULL, 'Violar lo establecido para el encendido y apagado de las luces', '2', '2', '2026-04-11 20:34:32'),
+(61, 'SERVICIO DE CUARTEL', NULL, 'Consentir daños a la limpieza o a los muebles e inmuebles', '3', '3', '2026-04-11 20:34:32'),
+(62, 'SERVICIO DE CUARTEL', NULL, 'Consentir que se hable en voz alta', '2', '2', '2026-04-11 20:34:32'),
+(63, 'SERVICIO DE CUARTEL', NULL, 'No llevar correctamente el libro del cuartel', '2-4', '2-4', '2026-04-11 20:34:32'),
+(64, 'SERVICIO DE CUARTEL', NULL, 'Mantener encendido el televisor o radio en horario no dispuesto', '3-5', '3-5', '2026-04-11 20:34:32'),
+(65, 'SERVICIO DE CUARTEL', NULL, 'Área sucia', '3-5', '3-5', '2026-04-11 20:34:32'),
+(66, 'SERVICIO DE GUARDIA', NULL, 'Abandonar el servicio', '2-4', '6-11', '2026-04-11 20:35:51'),
+(67, 'SERVICIO DE GUARDIA', NULL, 'Negligencia en el servicio', '2-4', '6-11', '2026-04-11 20:35:51'),
+(68, 'SERVICIO DE GUARDIA', NULL, 'Incumplir las exigencias establecidas en el servicio que presta', '1-3', '5-7', '2026-04-11 20:35:51'),
+(69, 'SERVICIO DE GUARDIA', NULL, 'Realizar actividades ajenas al servicio de guardia', '1-3', '3-5', '2026-04-11 20:35:51'),
+(70, 'SERVICIO DE GUARDIA', NULL, 'Dejarse relevar o relevar incorrectamente', '1-3', '3-5', '2026-04-11 20:35:51'),
+(71, 'SERVICIO DE GUARDIA', NULL, 'Evadir el servicio', '2-4', '5-7', '2026-04-11 20:35:51'),
+(72, 'DURANTE LA MARCHA', NULL, 'Abandonar el itinerario', '1-3', '3-5', '2026-04-11 20:35:51'),
+(73, 'DURANTE LA MARCHA', NULL, 'Hacer uso de propiedades estatales o particulares o dañarlas', '2-4', '6-11', '2026-04-11 20:35:51'),
+(74, 'DURANTE LA MARCHA', NULL, 'Ingerir alimentos sin autorización', '1-3', '5-7', '2026-04-11 20:35:51'),
+(75, 'DURANTE LA MARCHA', NULL, 'Dejar propiedades abandonadas', '4-6', '6-11', '2026-04-11 20:35:51'),
+(76, 'DURANTE LA MARCHA', NULL, 'Hacer visitas a viviendas y establecimientos sin autorización', '1-3', '6-11', '2026-04-11 20:35:51'),
+(77, 'DURANTE LA MARCHA', NULL, 'Bañarse en río, presas o lagunas sin autorización', '4-6', '6-11', '2026-04-11 20:35:51'),
+(78, 'DURANTE LA MARCHA', NULL, 'Faltarle el respeto a la población', '6-11', '6-11', '2026-04-11 20:35:51'),
+(79, 'FORMACIONES', NULL, 'Llegar tarde', '1', '1-3', '2026-04-11 20:35:51'),
+(80, 'FORMACIONES', NULL, 'Moverse en posición de Firmes', '1', '1', '2026-04-11 20:35:51'),
+(81, 'FORMACIONES', NULL, 'No asumir la posición de Firmes', '1', '2', '2026-04-11 20:35:51'),
+(82, 'FORMACIONES', NULL, 'Hablar sin permiso', '1', '2', '2026-04-11 20:35:51'),
+(83, 'FORMACIONES', NULL, 'Incorporarse o salir de formación sin permiso', '1', '2', '2026-04-11 20:35:51'),
+(84, 'FORMACIONES', NULL, 'Reírse', '1', '2', '2026-04-11 20:35:51'),
+(85, 'FORMACIONES', NULL, 'Asistir con objetos no dispuestos', '1', '1', '2026-04-11 20:35:51'),
+(86, 'FORMACIONES', NULL, 'No estar alineado', '1', '1', '2026-04-11 20:35:51'),
+(87, 'FORMACIONES', NULL, 'Mal procedimiento de infantería', '1', '1', '2026-04-11 20:35:51'),
+(88, 'FORMACIONES', NULL, 'Ejecutar incorrectamente los ejercicios', '1', '1', '2026-04-11 20:35:51'),
+(89, 'FORMACIONES', NULL, 'Jugar', '1', '2', '2026-04-11 20:35:51'),
+(90, 'FORMACIONES', NULL, 'No presentarse de forma correcta', '1', '2-4', '2026-04-11 20:35:51'),
+(91, 'USO DEL UNIFORME', NULL, 'Ojal desabotonado o faltarle botones', '1', '1', '2026-04-11 20:35:51'),
+(92, 'USO DEL UNIFORME', NULL, 'Uniforme sucio o ajado', '1', '2', '2026-04-11 20:35:51'),
+(93, 'USO DEL UNIFORME', NULL, 'Calzado sucio o sin brillo', '1', '1-2', '2026-04-11 20:35:51'),
+(94, 'USO DEL UNIFORME', NULL, 'No usar o usar incorrectamente los atributos', '1', '1-2', '2026-04-11 20:35:51'),
+(95, 'USO DEL UNIFORME', NULL, 'Uso incorrecto del uniforme', '1', '2', '2026-04-11 20:35:51'),
+(96, 'USO DEL UNIFORME', NULL, 'Estar descubierto fuera de techo', '1', '2', '2026-04-11 20:35:51'),
+(97, 'USO DEL UNIFORME', NULL, 'Transformar el uniforme', '1-2', '2-4', '2026-04-11 20:35:51'),
+(98, 'INGESTIÓN DE ALIMENTOS', NULL, 'No emplear correctamente los cubiertos', '1', '1', '2026-04-11 20:35:51'),
+(99, 'INGESTIÓN DE ALIMENTOS', NULL, 'Comer con las manos sucias', '1', '1', '2026-04-11 20:35:51'),
+(100, 'INGESTIÓN DE ALIMENTOS', NULL, 'Dejar desperdicios de comida en la mesa', '1', '1', '2026-04-11 20:35:51'),
+(101, 'INGESTIÓN DE ALIMENTOS', NULL, 'Consumir alimentos fuera del lugar dispuesto para ello', '1', '2', '2026-04-11 20:35:51'),
+(102, 'INGESTIÓN DE ALIMENTOS', NULL, 'Extraer alimentos del comedor', '1', '2', '2026-04-11 20:35:51'),
+(103, 'INGESTIÓN DE ALIMENTOS', NULL, 'Asistir al comedor o cafetería en horario no dispuesto', '1', '2', '2026-04-11 20:35:51'),
+(104, 'CORTES MILITARES', NULL, 'Hablar sin autorización', '1', '2', '2026-04-11 20:35:51'),
+(105, 'CORTES MILITARES', NULL, 'Reírse', '1', '3', '2026-04-11 20:35:51'),
+(106, 'CORTES MILITARES', NULL, 'Dormitar', '1', '3', '2026-04-11 20:35:51'),
+(107, 'CORTES MILITARES', NULL, 'Sentarse incorrectamente', '1', '1', '2026-04-11 20:35:51'),
+(108, 'CORTES MILITARES', NULL, 'Interrumpir las declaraciones', '1', '2', '2026-04-11 20:35:51'),
+(109, 'CORTES MILITARES', NULL, 'No prestar atención', '1', '1', '2026-04-11 20:35:51'),
+(110, 'CLASES Y ESTUDIOS INDEPENDIENTE', NULL, 'Ausentarse o no asistir', '2-6', '6-11', '2026-04-11 20:35:51'),
+(111, 'CLASES Y ESTUDIOS INDEPENDIENTE', NULL, 'Llegar tarde', '1-2', '2-3', '2026-04-11 20:35:51'),
+(112, 'CLASES Y ESTUDIOS INDEPENDIENTE', NULL, 'Maltratar o destruir los medios de BME', '4-6', '6-11', '2026-04-11 20:35:51'),
+(113, 'CLASES Y ESTUDIOS INDEPENDIENTE', NULL, 'Alterar el orden', '1-3', '3-6', '2026-04-11 20:35:51'),
+(114, 'CLASES Y ESTUDIOS INDEPENDIENTE', NULL, 'Sentarse incorrectamente', '1', '2', '2026-04-11 20:35:51'),
+(115, 'CLASES Y ESTUDIOS INDEPENDIENTE', NULL, 'No llevar los materiales indicados', '1-3', '2-6', '2026-04-11 20:35:51'),
+(116, 'CLASES Y ESTUDIOS INDEPENDIENTE', NULL, 'Ensuciar el aula', '1-2', '2-4', '2026-04-11 20:35:51'),
+(117, 'CLASES Y ESTUDIOS INDEPENDIENTE', NULL, 'Ejecutar acciones que no tengan relación con la clase', '1-2', '2-5', '2026-04-11 20:35:51'),
+(118, 'CLASES Y ESTUDIOS INDEPENDIENTE', NULL, 'Hablar sin permiso', '1', '1', '2026-04-11 20:35:51'),
+(119, 'CLASES Y ESTUDIOS INDEPENDIENTE', NULL, 'No presentarse o hacerlo incorrectamente', '1', '1', '2026-04-11 20:35:51'),
+(120, 'CLASES Y ESTUDIOS INDEPENDIENTE', NULL, 'No cumplir las tareas en clases o el estudio individual', '2-4', '6-11', '2026-04-11 20:35:51'),
+(121, 'CLASES Y ESTUDIOS INDEPENDIENTE', NULL, 'Dormir en clase o estudio individual', '1-3', '3-5', '2026-04-11 20:35:51'),
+(122, 'CLASES Y ESTUDIOS INDEPENDIENTE', NULL, 'No tener los libros conservados y con forro', '1-3', '3-5', '2026-04-11 20:35:51');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `directiva`
+--
+
+CREATE TABLE `directiva` (
+  `id` int(11) NOT NULL,
+  `nombre` text NOT NULL,
+  `Apellidos` text NOT NULL,
+  `CI` text NOT NULL,
+  `password` text NOT NULL,
+  `ocupacion` enum('director','subdirector_general','subdirector_docente','politico','jefe_batallon') DEFAULT 'subdirector_docente'
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+--
+-- Volcado de datos para la tabla `directiva`
+--
+
+INSERT INTO `directiva` (`id`, `nombre`, `Apellidos`, `CI`, `password`, `ocupacion`) VALUES
+(1, 'Jorge ', 'LEGRÁ BORGES ', '83844838384', 'EMCC2026', 'director');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `estudiante`
+--
+
+CREATE TABLE `estudiante` (
+  `id` int(11) NOT NULL,
+  `nombre` text COLLATE utf8_spanish_ci NOT NULL,
+  `apellidos` text COLLATE utf8_spanish_ci NOT NULL,
+  `CI` text COLLATE utf8_spanish_ci NOT NULL,
+  `password` text COLLATE utf8_spanish_ci NOT NULL,
+  `grado` varchar(10) COLLATE utf8_spanish_ci DEFAULT NULL,
+  `peloton` int(11) DEFAULT '1',
+  `ocupacion` enum('ninguno','activista','jefe_escuadra','politico_peloton','2do_jefe_peloton','1er_jefe_peloton','politico_compania','2do_jefe_compania','1er_jefe_compania','sargento_mayor','2do_jefe_batallon','jefe_batallon') COLLATE utf8_spanish_ci DEFAULT 'ninguno'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `estudiante`
+--
+
+INSERT INTO `estudiante` (`id`, `nombre`, `apellidos`, `CI`, `password`, `grado`, `peloton`, `ocupacion`) VALUES
+(1, 'Esthailer', 'Alba Fernández', '10112864826', 'EMCC2026', '10mo', 1, 'ninguno'),
+(2, 'Ayamey Arialis', 'Bray Hernández', '10071068817', 'EMCC2026', '10mo', 1, 'ninguno'),
+(3, 'Karel', 'Brow Rodríguez', '10050562628', 'EMCC2026', '10mo', 1, 'ninguno'),
+(4, 'Yan Carlos', 'Cabrera Sanz', '10110866106', 'EMCC2026', '10mo', 1, 'ninguno'),
+(5, 'Daniel', 'Cano Suarez', '10102669728', 'EMCC2026', '10mo', 1, 'ninguno'),
+(6, 'Helen Ondina', 'Chacón Mrtinez', '10081266213', 'EMCC2026', '10mo', 1, 'ninguno'),
+(7, 'Alejandro Ernesto', 'Codina Martin', '10031061906', 'EMCC2026', '10mo', 1, 'ninguno'),
+(8, 'Ivanice De Fatima', 'Da Rocha Garcia', '109101667040', 'EMCC2026', '10mo', 1, 'ninguno'),
+(9, 'Fredery', 'Dolores Céspedes', '10111762347', 'EMCC2026', '10mo', 1, 'ninguno'),
+(10, 'Dailyn', 'Estrada Yirat', '10010764418', 'EMCC2026', '10mo', 1, 'ninguno'),
+(11, 'Leylanis', 'Faulkier Lafonte', '10032368212', 'EMCC2026', '10mo', 1, 'ninguno'),
+(12, 'Jorge Manuel', 'Fernández Gómez', '10041963603', 'EMCC2026', '10mo', 1, 'ninguno'),
+(13, 'Melani', 'González Hidalgo', '10021665538', 'EMCC2026', '10mo', 1, 'ninguno'),
+(14, 'Eddy Paulo', 'Gutierrez Belimeli', '10082060929', 'EMCC2026', '10mo', 1, 'ninguno'),
+(15, 'Victor Manuel', 'Gutierrez Diaz', '10040162028', 'EMCC2026', '10mo', 1, 'ninguno'),
+(16, 'Anyelina de la C', 'Iglesias Naranjo', '10060164210', 'EMCC2026', '10mo', 1, 'ninguno'),
+(17, 'Fernando', 'Legrá Galván', '10120269908', 'EMCC2026', '10mo', 1, 'ninguno'),
+(18, 'Dawil Elier', 'Leyva González', '10080262321', 'EMCC2026', '10mo', 1, 'ninguno'),
+(19, 'Eduardo Alejandro', 'López Rivera', '10090361004', 'EMCC2026', '10mo', 1, 'ninguno'),
+(20, 'Xaimarys Felicia', 'Machado Díaz', '10072326410', 'EMCC2026', '10mo', 1, 'ninguno'),
+(21, 'Bárbara Elena', 'Padilla Yirat', '10110468805', 'EMCC2026', '10mo', 1, 'ninguno'),
+(22, 'Milena Marbelis', 'Pastor Bonilla', '10093060835', 'EMCC2026', '10mo', 1, 'ninguno'),
+(23, 'Idel Ernesto', 'Peña Domínguez', '10120164506', 'EMCC2026', '10mo', 1, 'ninguno'),
+(24, 'Amanda', 'Reigosa García', '10010263014', 'EMCC2026', '10mo', 1, 'ninguno'),
+(25, 'Frank Amed', 'Rizo García', '10111563329', 'EMCC2026', '10mo', 1, 'ninguno'),
+(26, 'Annara S', 'Rodriguez Moreno', '10112066930', 'EMCC2026', '10mo', 1, 'ninguno'),
+(27, 'Manuel Alejandro', 'Sánchez Coello', '10010467820', 'EMCC2026', '10mo', 1, 'ninguno'),
+(28, 'Cristian', 'Acuña Caballero', '10077761303', 'EMCC2026', '10mo', 2, 'ninguno'),
+(29, 'Jefferson Roberto', 'Arango Capote', '10060964408', 'EMCC2026', '10mo', 2, 'ninguno'),
+(30, 'Yonathan Leonardo', 'Araujo Díaz', '10060964408', 'EMCC2026', '10mo', 2, 'ninguno'),
+(31, 'Vania Bárbara', 'Batista Izquierdo', '10010862410', 'EMCC2026', '10mo', 2, 'ninguno'),
+(32, 'Yeidy Vanessa', 'Beltrán Valdés', '10031161112', 'EMCC2026', '10mo', 2, 'ninguno'),
+(33, 'Javier', 'Beritán Sánchez', '10102167726', 'EMCC2026', '10mo', 2, 'ninguno'),
+(34, 'Yeison Alejandro', 'Borrell González', '10110961207', 'EMCC2026', '10mo', 2, 'ninguno'),
+(35, 'Leoel', 'Cantillo Gómez', '10040961008', 'EMCC2026', '10mo', 2, 'ninguno'),
+(36, 'Miguel Angel', 'Chacón Hernández', '10022064604', 'EMCC2026', '10mo', 2, 'ninguno'),
+(37, 'Karla Damay', 'Cué Barrios', '10081761734', 'EMCC2026', '10mo', 2, 'ninguno'),
+(38, 'Anna Bárbara', 'García Vargas', '10072369517', 'EMCC2026', '10mo', 2, 'ninguno'),
+(39, 'Dalton Anael', 'Gil Borrero', '10072069905', 'EMCC2026', '10mo', 2, 'ninguno'),
+(40, 'Thalía', 'Guillén Pavón', '09100163436', 'EMCC2026', '10mo', 2, 'ninguno'),
+(41, 'Valeria', 'Herrera Taset', '10102065819', 'EMCC2026', '10mo', 2, 'ninguno'),
+(42, 'Darilis', 'Jay Favier', '10112567910', 'EMCC2026', '10mo', 2, 'ninguno'),
+(43, 'Víctor Diago', 'Jiménez Villa', '10042463804', 'EMCC2026', '10mo', 2, 'ninguno'),
+(44, 'Alain de la Caridad', 'Lima Perez', '10042964206', 'EMCC2026', '10mo', 2, 'ninguno'),
+(45, 'Karelit de las M', 'Llorente Tamayo', '10032164919', 'EMCC2026', '10mo', 2, 'ninguno'),
+(46, 'Esther María', 'Mendiola Martínez', '10060662713', 'EMCC2026', '10mo', 2, 'ninguno'),
+(47, 'Bryan Daniel', 'Mendoza Leyva', '10071168405', 'EMCC2026', '10mo', 2, 'ninguno'),
+(48, 'María Virginia', 'Miranda Ceballo', '10120465936', 'EMCC2026', '10mo', 2, 'ninguno'),
+(49, 'Laurie de los Milagros', 'Nate Lara', '10050664713', 'EMCC2026', '10mo', 2, 'ninguno'),
+(50, 'Fabian Emilio', 'Peralta Carmenates', '10052964004', 'EMCC2026', '10mo', 2, 'ninguno'),
+(51, 'Leonardo', 'Ramírez Zayas', '10080368137', 'EMCC2026', '10mo', 2, 'ninguno'),
+(52, 'Roddery', 'Rojasojas Guevara', '10100861227', 'EMCC2026', '10mo', 2, 'ninguno'),
+(53, 'Rodrigo Ricardo', 'Sanjurjo Mengana', '10102760728', 'EMCC2026', '10mo', 2, 'ninguno'),
+(54, 'Diego Arnaldo', 'Serrano del Toro', '10031866128', 'EMCC2026', '10mo', 2, 'ninguno'),
+(55, 'Izmarys', 'Zabala Pérez', '10012661331', 'EMCC2026', '10mo', 2, 'ninguno'),
+(81, 'Javier Alejandro', 'Auty Castillo', '09112863602', 'EMCC2026', '11no', 4, 'ninguno'),
+(82, 'Leonis', 'Caberiza Cuevas', '08081364120', 'EMCC2026', '11no', 4, 'ninguno'),
+(83, 'Adonys Alberto', 'Chacón Leyva', '09042164621', 'EMCC2026', '11no', 4, 'ninguno'),
+(84, 'Leiser Ernesto', 'Chavez Artola', '09072764702', 'EMCC2026', '11no', 4, 'ninguno'),
+(85, 'Diego José', 'Diversent Abreu', '09020760524', 'EMCC2026', '11no', 4, 'ninguno'),
+(86, 'Rocio Maday', 'Durruty Castañeda', '09122369917', 'EMCC2026', '11no', 4, 'ninguno'),
+(87, 'Keyla Salet', 'García Hernández', '09052362815', 'EMCC2026', '11no', 4, 'ninguno'),
+(88, 'Samuel Alejandro', 'García Mora', '09082565621', 'EMCC2026', '11no', 4, 'ninguno'),
+(89, 'Maikel Néstor', 'González López', '09012863708', 'EMCC2026', '11no', 4, 'ninguno'),
+(90, 'Luis Daniel', 'González Rodríguez', '09100162723', 'EMCC2026', '11no', 4, 'ninguno'),
+(91, 'Eddiel', 'Gort Sánchez', '09103761530', 'EMCC2026', '11no', 4, 'ninguno'),
+(92, 'Erika', 'Hernández Aldana', '09103761530', 'EMCC2026', '11no', 4, 'ninguno'),
+(93, 'Alejandro', 'Herrera Bernal', '09082666906', 'EMCC2026', '11no', 4, 'ninguno'),
+(94, 'Bryan', 'Laza Foste', '09050962009', 'EMCC2026', '11no', 4, 'ninguno'),
+(95, 'William Denis', 'Leyva Guerra', '0902664200', 'EMCC2026', '11no', 4, 'ninguno'),
+(96, 'Aliangel', 'Martínez Morales', '09072764809', 'EMCC2026', '11no', 4, 'ninguno'),
+(97, 'Sttefani', 'Milanés Ruiz', '09030964811', 'EMCC2026', '11no', 4, 'ninguno'),
+(98, 'Diego Miguel', 'Moreno García', '09021161927', 'EMCC2026', '11no', 4, 'ninguno'),
+(99, 'Magdiel', 'Munde Martínez', '09011966901', 'EMCC2026', '11no', 4, 'ninguno'),
+(100, 'Isabella de la C', 'Pereira Rosell', '09111363031', 'EMCC2026', '11no', 4, 'ninguno'),
+(101, 'Maikol', 'Perera Subirot', '09099286932', 'EMCC2026', '11no', 4, 'ninguno'),
+(103, 'Brayan Luis', 'Ponce Jiménez', '09100264622', 'EMCC2026', '11no', 4, 'ninguno'),
+(104, 'Georky Alejandro', 'Ramírez Zayas', '09032167304', 'EMCC2026', '11no', 4, 'ninguno'),
+(105, 'Annelis', 'Reyes Moragas', '09021469812', 'EMCC2026', '11no', 4, 'ninguno'),
+(106, 'Moisés', 'Suárez Soto', '09081667802', 'EMCC2026', '11no', 4, 'ninguno'),
+(107, 'Deidel Danky', 'Valdés Ledesma', '09010662025', 'EMCC2026', '11no', 4, 'ninguno'),
+(108, 'Eulidel Leanky', 'Valdés Ledesma', '09010662229', 'EMCC2026', '11no', 4, 'ninguno'),
+(109, 'Guillermo Miguel', 'Vega Besse', '09030465605', 'EMCC2026', '11no', 4, 'ninguno'),
+(110, 'Jennifer', 'González Sánchez', '09122865614', 'EMCC2026', '11no', 4, 'ninguno'),
+(125, 'Alain', 'Aguilera Alvarez', '09020268205', 'EMCC2026', '11no', 5, 'ninguno'),
+(126, 'Rafael Adrian', 'Alarcón Bolaños', '09111469900', 'EMCC2026', '11no', 5, 'ninguno'),
+(127, 'Harisley', 'Amate Licea', '09091662919', 'EMCC2026', '11no', 5, 'ninguno'),
+(128, 'Yoandy Lázaro', 'Avalo Guerra', '09080365122', 'EMCC2026', '11no', 5, 'ninguno'),
+(129, 'Maria de los A', 'Bolivar Aguiar', '09040462439', 'EMCC2026', '11no', 5, 'ninguno'),
+(130, 'Yan Michel', 'Cabrera Sanz', '09092469102', 'EMCC2026', '11no', 5, 'ninguno'),
+(131, 'Alberto Antonio', 'Charro Osoria', '9110565745', 'EMCC2026', '11no', 5, 'ninguno'),
+(132, 'Leroy', 'Despaigne Ramos', '09061467606', 'EMCC2026', '11no', 5, 'ninguno'),
+(133, 'Gensay Edel', 'Dilla Hernández', '09031367101', 'EMCC2026', '11no', 5, 'ninguno'),
+(134, 'Sissi', 'Fernández Fernández', '09090766312', 'EMCC2026', '11no', 5, 'ninguno'),
+(135, 'Alejandro', 'González Concepción', '09110986406', 'EMCC2026', '11no', 5, 'ninguno'),
+(136, 'Kenny', 'González Pérez', '09042160229', 'EMCC2026', '11no', 5, 'ninguno'),
+(137, 'Maria Karla', 'Hartemant Sánchez', '09012862338', 'EMCC2026', '11no', 5, 'ninguno'),
+(138, 'Karel Alejandro', 'La Fuente Mosqueda', '09082568409', 'EMCC2026', '11no', 5, 'ninguno'),
+(139, 'Kevin', 'León Martinez', '09112368903', 'EMCC2026', '11no', 5, 'ninguno'),
+(140, 'Nataly Josefhine', 'Licea Carnet', '09071865717', 'EMCC2026', '11no', 5, 'ninguno'),
+(141, 'Clevel', 'Loviniel Romero', '08102966205', 'EMCC2026', '11no', 5, 'ninguno'),
+(142, 'Royne Leinier', 'Lugo López', '09092965849', 'EMCC2026', '11no', 5, 'ninguno'),
+(143, 'Cristian Raúl', 'Machado Cisneros', '09092160449', 'EMCC2026', '11no', 5, 'ninguno'),
+(144, 'Melany', 'Martinez Fajardo', '09111766611', 'EMCC2026', '11no', 5, 'ninguno'),
+(145, 'Uberlandis', 'Medinas Rivas', '09051064105', 'EMCC2026', '11no', 5, 'ninguno'),
+(146, 'Andrea Mariana', 'Morejón Hernández', '09102562212', 'EMCC2026', '11no', 5, 'ninguno'),
+(147, 'Yurisleivis', 'Odelín Gegondo', '09102068412', 'EMCC2026', '11no', 5, 'ninguno'),
+(148, 'Delbis Dalien', 'Parra Rodríguez', '09102266761', 'EMCC2026', '11no', 5, 'ninguno'),
+(149, 'Dianelis de las M', 'Pizarro Alvarez', '09050669910', 'EMCC2026', '11no', 5, 'ninguno'),
+(150, 'Heriberto Leandro', 'Quignon Torres', '09121860522', 'EMCC2026', '11no', 5, 'ninguno'),
+(151, 'Keyla de la Caridad', 'Salé Macias', '09121865718', 'EMCC2026', '11no', 5, 'ninguno'),
+(152, 'Katerine', 'Sánchez Romero', '9071561517', 'EMCC2026', '11no', 5, 'ninguno'),
+(153, 'Rogel', 'Sanjunjo Mengana', '09031064402', 'EMCC2026', '11no', 5, 'ninguno'),
+(154, 'Yosvany Miguel', 'Toledo Queralta', '09082568920', 'EMCC2026', '11no', 5, 'ninguno'),
+(180, 'Kendry Alejandro', 'Delgado Herrera', '08112662023', 'EMCC2026', '12mo', 7, 'ninguno'),
+(181, 'Carlos Amaral', 'Fernando Imperial', '008723018CE040', 'EMCC2026', '12mo', 7, 'ninguno'),
+(182, 'Mariam Libertad', 'Garcia Rodriguez', '08050862315', 'EMCC2026', '12mo', 7, 'ninguno'),
+(183, 'Dalia Thalia(H)', 'Gondres Matural', '08122564730', 'EMCC2026', '12mo', 7, 'ninguno'),
+(184, 'Ernesto Alejandro', 'González Campos', '08022966101', 'EMCC2026', '12mo', 7, 'ninguno'),
+(185, 'Kevin', 'González Grillo', '08110563207', 'EMCC2026', '12mo', 7, 'ninguno'),
+(186, 'Eriel Eduardo', 'González Rosabal', '08051066603', 'EMCC2026', '12mo', 7, 'ninguno'),
+(187, 'Chei Lin', 'Hernández Leyva', '08012266915', 'EMCC2026', '12mo', 7, 'ninguno'),
+(188, 'Lia', 'Hernández Reyes', '08020661412', 'EMCC2026', '12mo', 7, 'ninguno'),
+(189, 'Gianni Pablo', 'Herrera Alfonso', '08011167207', 'EMCC2026', '12mo', 7, 'ninguno'),
+(190, 'Cristian Humberto', 'Iglesias Medina', '08031369502', 'EMCC2026', '12mo', 7, 'ninguno'),
+(191, 'Daylin', 'Olivares Lara', '08092669410', 'EMCC2026', '12mo', 7, 'ninguno'),
+(192, 'Yan Karlo', 'Oquendo Gómez', '08071666520', 'EMCC2026', '12mo', 7, 'ninguno'),
+(193, 'Ian Karlos', 'Peña Sarduy', '08121466002', 'EMCC2026', '12mo', 7, 'ninguno'),
+(194, 'Cristian Jhoan', 'Pérez Hernández', '08072567004', 'EMCC2026', '12mo', 7, 'ninguno'),
+(195, 'Jennifer Camila', 'Polanco López', '08081966231', 'EMCC2026', '12mo', 7, 'ninguno'),
+(196, 'Bernay Alejandro', 'Ponce Borrayo', '08102461802', 'EMCC2026', '12mo', 7, 'ninguno'),
+(197, 'Jorge Luis', 'Reyes Gónzalez', '08021663807', 'EMCC2026', '12mo', 7, 'ninguno'),
+(198, 'Anay', 'Souhlet Atencio', '09122766316', 'EMCC2026', '12mo', 7, 'ninguno'),
+(199, 'Ambar Jade', 'Suarez De León', '08072168012', 'EMCC2026', '12mo', 7, 'ninguno'),
+(200, 'Runey', 'Téllez Hernández', '089060466200', 'EMCC2026', '12mo', 7, 'ninguno'),
+(201, 'Yoanka de la Caridad', 'Toledo Sánchez', '08062068812', 'EMCC2026', '12mo', 7, 'ninguno'),
+(202, 'Lia de la Caridad', 'Torres Lominchar', '08121863212', 'EMCC2026', '12mo', 7, 'ninguno'),
+(210, 'Liuver', 'Acosta Cruzata', '07071761422', 'EMCC2026', '12mo', 8, 'ninguno'),
+(211, 'Yelena', 'Acosta Specht', '08031762213', 'EMCC2026', '12mo', 8, 'ninguno'),
+(212, 'Roxana de la Caridad', 'Aguilar Nuñez', '08110869085', 'EMCC2026', '12mo', 8, 'ninguno'),
+(213, 'Randy', 'Argote Chacón', '08082869903', 'EMCC2026', '12mo', 8, 'ninguno'),
+(214, 'Yoandrys', 'Castañeda Castaño', '08121169600', 'EMCC2026', '12mo', 8, 'ninguno'),
+(215, 'Meybi de la Caridad', 'Cepero Miñoso', '08091467718', 'EMCC2026', '12mo', 8, 'ninguno'),
+(216, 'Anthony', 'Cruz Labrador', '08070168503', 'EMCC2026', '12mo', 8, 'ninguno'),
+(217, 'Karen Beatriz', 'Cutiño Meriño', '08121065115', 'EMCC2026', '12mo', 8, 'ninguno'),
+(218, 'Naomi ', 'Estupiñán Rodriguez', '080111665839', 'EMCC2026', '12mo', 8, 'ninguno'),
+(219, 'Laider', 'Gómez Despaigne', '08062861121', 'EMCC2026', '12mo', 8, 'ninguno'),
+(220, 'Leider', 'Gómez Despaigne', '08062861228', 'EMCC2026', '12mo', 8, 'ninguno'),
+(221, 'Osmel', 'González Lobaina', '08090464301', 'EMCC2026', '12mo', 8, 'ninguno'),
+(222, 'Liuber', 'González Nolazco', '08073168308', 'EMCC2026', '12mo', 8, 'ninguno'),
+(223, 'Carlos Alejandro', 'González Rondón', '08101568402', 'EMCC2026', '12mo', 8, 'ninguno'),
+(224, 'Annielis', 'Heredia Rivero', '08042669915', 'EMCC2026', '12mo', 8, 'ninguno'),
+(225, 'Camila de la Caridad', 'Lóriga Valladares', '08030763436', 'EMCC2026', '12mo', 8, 'ninguno'),
+(226, 'Yoi Li', 'Mayet Rodriguez', '08101363836', 'EMCC2026', '12mo', 8, 'ninguno'),
+(227, 'Ubaldo Diego', 'Padilla Márquez', '08082368622', 'EMCC2026', '12mo', 8, 'ninguno'),
+(228, 'Lizandra Margarita', 'Peña Ramírez', '0810286903', 'EMCC2026', '12mo', 8, 'ninguno'),
+(229, 'Elianys', 'Peraza Hechavarría', '08082169816', 'EMCC2026', '12mo', 8, 'ninguno'),
+(230, 'Ismael', 'Rivero Massó', '08012866503', 'EMCC2026', '12mo', 8, 'ninguno'),
+(231, 'Kevin Noel', 'Triana Daza', '08102869322', 'EMCC2026', '12mo', 8, 'ninguno'),
+(232, 'Ronni', 'Vidal Sánchez', '08072263325', 'EMCC2026', '12mo', 8, 'ninguno'),
+(233, 'Indira de la Rosa', 'Viltres Martinez', '08022062614', 'EMCC2026', '12mo', 8, 'ninguno'),
+(234, 'Dayrón', 'Zamora Savón', '08013164108', 'EMCC2026', '12mo', 8, 'ninguno'),
+(235, 'Ernesto', 'Arevalo González', '009120569636', 'EMCC2026', '10mo', 3, 'ninguno'),
+(236, 'Saray', 'Bandera Fernández', '009120569636', 'EMCC2026', '10mo', 3, 'ninguno'),
+(237, 'Andry Yadian', 'Benitez Torrez', '00061164027', 'EMCC2026', '10mo', 3, 'ninguno'),
+(238, 'Sadiel', 'Camacho Duarte', '00021566603', 'EMCC2026', '10mo', 3, 'ninguno'),
+(239, 'Victor Manuel', 'Cobas Abreu', '00100669722', 'EMCC2026', '10mo', 3, 'ninguno'),
+(240, 'Alejandro', 'Cobas de Avila', '00070267905', 'EMCC2026', '10mo', 3, 'ninguno'),
+(241, 'Liz Mary', 'Couto Toca', '00012064937', 'EMCC2026', '10mo', 3, 'ninguno'),
+(242, 'Michel', 'Cruz Ramírez', '00030962523', 'EMCC2026', '10mo', 3, 'ninguno'),
+(243, 'Jean Pieer', 'Gutierrez Upiorre', '00071561603', 'EMCC2026', '10mo', 3, 'ninguno'),
+(244, 'Arismaris', 'Loy Brooks', '00060368513', 'EMCC2026', '10mo', 3, 'ninguno'),
+(245, 'Isis Esther', 'Naranjo Pérez', '00071368314', 'EMCC2026', '10mo', 3, 'ninguno'),
+(246, 'Bárbara de las M', 'Ramos Martinez', '00120969037', 'EMCC2026', '10mo', 3, 'ninguno'),
+(247, 'Amy', 'Rodríguez Lorenzo', '00052769616', 'EMCC2026', '10mo', 3, 'ninguno'),
+(248, 'Aymyly Yadira', 'Romero Rodriguez', '00040760915', 'EMCC2026', '10mo', 3, 'ninguno'),
+(249, 'Yoansy Addie', 'Rondón García', '00022660022', 'EMCC2026', '10mo', 3, 'ninguno'),
+(250, 'Ariel', 'Sandoval Cruz', '00111261040', 'EMCC2026', '10mo', 3, 'ninguno'),
+(251, 'Eduardo Enrique', 'Soto Rodriguez-Feo', '0010102565704', 'EMCC2026', '10mo', 3, 'ninguno'),
+(252, 'Alisneidis', 'Suarez Arroyo', '00081366932', 'EMCC2026', '10mo', 3, 'ninguno'),
+(253, 'Michel Enrique', 'Tamayo Mendoza', '001111563400', 'EMCC2026', '10mo', 3, 'ninguno'),
+(254, 'Lara de la Caridad', 'Toro Echemendia', '0011112061257', 'EMCC2026', '10mo', 3, 'ninguno'),
+(255, 'Kevin Daniel', 'Torres Jordán', '001121663309', 'EMCC2026', '10mo', 3, 'ninguno'),
+(256, 'Cristian Rolando', 'Varzaga Pupo', '00061662025', 'EMCC2026', '10mo', 3, 'ninguno'),
+(257, 'Yoselin', 'Vidal Crespo', '00080362812', 'EMCC2026', '10mo', 3, 'ninguno'),
+(258, 'Ronald', 'Vigil Vitón', '001120968829', 'EMCC2026', '10mo', 3, 'ninguno'),
+(259, 'Laura Chanell', 'Vilmas Rosario', '00072864012', 'EMCC2026', '10mo', 3, 'ninguno'),
+(260, 'Maria Karla', 'García Castañeda', '00021765011', 'EMCC2026', '10mo', 3, 'ninguno'),
+(261, 'Esthailer', 'Alba Fernández', '10112864826', 'EMCC2026', '10mo', 1, 'ninguno'),
+(262, 'Ayamey Arialis', 'Bray Hernández', '10071068817', 'EMCC2026', '10mo', 1, 'ninguno'),
+(263, 'Karel', 'Brow Rodríguez', '10050562628', 'EMCC2026', '10mo', 1, 'ninguno'),
+(264, 'Yan Carlos', 'Cabrera Sanz', '10110866106', 'EMCC2026', '10mo', 1, 'ninguno'),
+(265, 'Daniel', 'Cano Suarez', '10102669728', 'EMCC2026', '10mo', 1, 'ninguno'),
+(266, 'Helen Ondina', 'Chacón Mrtinez', '10081266213', 'EMCC2026', '10mo', 1, 'ninguno'),
+(267, 'Alejandro Ernesto', 'Codina Martin', '10031061906', 'EMCC2026', '10mo', 1, 'ninguno'),
+(268, 'Ivanice De Fatima', 'Da Rocha Garcia', '009101667LA040', 'EMCC2026', '10mo', 1, 'ninguno'),
+(269, 'Fredery', 'Dolores Céspedes', '10111762347', 'EMCC2026', '10mo', 1, 'ninguno'),
+(270, 'Dailyn', 'Estrada Yirat', '10010764418', 'EMCC2026', '10mo', 1, 'ninguno'),
+(271, 'Leylanis', 'Faulkier Lafonte', '10032368212', 'EMCC2026', '10mo', 1, 'ninguno'),
+(272, 'Jorge Manuel', 'Fernández Gómez', '10041963603', 'EMCC2026', '10mo', 1, 'ninguno'),
+(273, 'Hidalgo Melani', 'González', '10021665538', 'EMCC2026', '10mo', 1, 'ninguno'),
+(274, 'Eddy Paulo', 'Gutierrez Belimeli', '10082060929', 'EMCC2026', '10mo', 1, 'ninguno'),
+(275, 'Victor Manuel', 'Gutierrez Diaz', '10040162028', 'EMCC2026', '10mo', 1, 'ninguno'),
+(276, 'Anyelina de la C', 'Iglesias Naranjo', '10060164210', 'EMCC2026', '10mo', 1, 'ninguno'),
+(277, 'Fernando', 'Legrá Galván', '10120269908', 'EMCC2026', '10mo', 1, 'ninguno'),
+(278, 'Dawil Elier', 'Leyva González', '10080262321', 'EMCC2026', '10mo', 1, 'ninguno'),
+(279, 'Eduardo Alejandro', 'López Rivera', '10090361004', 'EMCC2026', '10mo', 1, 'ninguno'),
+(280, 'Xaimarys Felicia', 'Machado Díaz', '10072326410', 'EMCC2026', '10mo', 1, 'ninguno'),
+(281, 'Bárbara Elena', 'Padilla Yirat', '10110468805', 'EMCC2026', '10mo', 1, 'ninguno'),
+(282, 'Milena Marbelis', 'Pastor Bonilla', '10093060835', 'EMCC2026', '10mo', 1, 'ninguno'),
+(283, 'Idel Ernesto', 'Peña Domínguez', '10120164506', 'EMCC2026', '10mo', 1, 'ninguno'),
+(284, 'Amanda', 'Reigosa García', '10010263014', 'EMCC2026', '10mo', 1, 'ninguno'),
+(285, 'Frank Amed', 'Rizo García', '10111563329', 'EMCC2026', '10mo', 1, 'ninguno'),
+(286, 'Annara S', 'Rodriguez Moreno', '10112066930', 'EMCC2026', '10mo', 1, 'ninguno'),
+(287, 'Manuel Alejandro', 'Sánchez Coello', '10010467820', 'EMCC2026', '10mo', 1, 'ninguno');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `horario_asignaturas`
+--
+
+CREATE TABLE `horario_asignaturas` (
+  `id` int(11) NOT NULL,
+  `peloton_id` int(11) NOT NULL,
+  `dia_semana` tinyint(4) NOT NULL COMMENT '1=Lunes, 2=Martes, 3=Miércoles, 4=Jueves, 5=Viernes, 6=Sábado',
+  `turno_inicio` tinyint(4) NOT NULL,
+  `turnos_duracion` tinyint(4) DEFAULT '1',
+  `asignatura_id` int(11) NOT NULL,
+  `tipo_evento` enum('asignatura','tcp','prueba_final','evento_especial') COLLATE utf8_spanish_ci DEFAULT 'asignatura',
+  `semana` enum('esta','proxima') COLLATE utf8_spanish_ci DEFAULT 'esta'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `horario_asignaturas`
+--
+
+INSERT INTO `horario_asignaturas` (`id`, `peloton_id`, `dia_semana`, `turno_inicio`, `turnos_duracion`, `asignatura_id`, `tipo_evento`, `semana`) VALUES
+(1, 4, 1, 1, 2, 10, 'asignatura', 'esta'),
+(2, 4, 1, 3, 1, 2, 'asignatura', 'esta'),
+(3, 4, 1, 4, 1, 5, 'asignatura', 'esta'),
+(4, 4, 1, 5, 1, 3, 'asignatura', 'esta'),
+(6, 1, 1, 1, 45, 12, 'asignatura', 'esta');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `horario_config`
+--
+
+CREATE TABLE `horario_config` (
+  `id` int(11) NOT NULL,
+  `hora_inicio` time DEFAULT '08:00:00',
+  `duracion_turno_lunes_jueves` int(11) DEFAULT '45',
+  `duracion_turno_viernes` int(11) DEFAULT '40',
+  `descanso_entre_turnos` int(11) DEFAULT '5',
+  `merienda_despues_turno` int(11) DEFAULT '3',
+  `duracion_merienda` int(11) DEFAULT '15',
+  `viernes_con_merienda` tinyint(1) DEFAULT '0',
+  `sabado_con_clases` tinyint(1) DEFAULT '0',
+  `ultima_actualizacion` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `horario_config`
+--
+
+INSERT INTO `horario_config` (`id`, `hora_inicio`, `duracion_turno_lunes_jueves`, `duracion_turno_viernes`, `descanso_entre_turnos`, `merienda_despues_turno`, `duracion_merienda`, `viernes_con_merienda`, `sabado_con_clases`, `ultima_actualizacion`) VALUES
+(1, '08:00:00', 45, 40, 5, 3, 15, 0, 0, '2026-04-17 00:18:28');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `meritos`
+--
+
+CREATE TABLE `meritos` (
+  `id` int(11) NOT NULL,
+  `categoria` varchar(100) COLLATE utf8_spanish_ci NOT NULL COMMENT 'PROCESO DOCENTE, ACTIVIDADES CIENTÍFICAS, VIDA DIARIA, etc.',
+  `subcategoria` varchar(100) COLLATE utf8_spanish_ci DEFAULT NULL COMMENT 'NIVEL MUNICIPAL, PROVINCIAL, ROTACIÓN DE MANDO, etc.',
+  `causa` varchar(255) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Descripción de la causa del mérito',
+  `meritos` int(11) NOT NULL COMMENT 'Cantidad de méritos otorgados',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `meritos`
+--
+
+INSERT INTO `meritos` (`id`, `categoria`, `subcategoria`, `causa`, `meritos`, `created_at`) VALUES
+(1, 'ACTIVIDADES CIENTÍFICAS / DEPORTIVAS / CULTURALES', NULL, 'Por participar', 1, '2026-04-11 20:36:53'),
+(2, 'ACTIVIDADES CIENTÍFICAS / DEPORTIVAS / CULTURALES', NULL, 'Obtener 3er lugar', 3, '2026-04-11 20:36:53'),
+(3, 'ACTIVIDADES CIENTÍFICAS / DEPORTIVAS / CULTURALES', NULL, 'Obtener 2do lugar', 4, '2026-04-11 20:36:53'),
+(4, 'ACTIVIDADES CIENTÍFICAS / DEPORTIVAS / CULTURALES', NULL, 'Obtener 1er lugar', 5, '2026-04-11 20:36:53'),
+(5, 'ACTIVIDADES CIENTÍFICAS / DEPORTIVAS / CULTURALES', NULL, 'Obtener la condición de destacado o relevante', 6, '2026-04-11 20:36:53'),
+(6, 'ACTIVIDADES CIENTÍFICAS / DEPORTIVAS / CULTURALES', 'NIVEL MUNICIPAL', 'Evento externo a nivel municipal', 4, '2026-04-11 20:36:53'),
+(7, 'ACTIVIDADES CIENTÍFICAS / DEPORTIVAS / CULTURALES', 'NIVEL PROVINCIAL', 'Evento externo a nivel provincial', 6, '2026-04-11 20:36:53'),
+(8, 'ACTIVIDADES CIENTÍFICAS / DEPORTIVAS / CULTURALES', 'NIVEL DE EJÉRCITO', 'Evento externo a nivel de ejército', 8, '2026-04-11 20:36:53'),
+(9, 'ACTIVIDADES CIENTÍFICAS / DEPORTIVAS / CULTURALES', 'NIVEL NACIONAL', 'Evento externo a nivel nacional', 10, '2026-04-11 20:36:53'),
+(10, 'ROTACIÓN DE MANDO', NULL, 'Jefe de escuadra', 2, '2026-04-11 20:36:53'),
+(11, 'ROTACIÓN DE MANDO', NULL, 'Jefe de pelotón', 4, '2026-04-11 20:36:53'),
+(12, 'ROTACIÓN DE MANDO', NULL, 'Segundo jefe de pelotón', 6, '2026-04-11 20:36:53'),
+(13, 'ROTACIÓN DE MANDO', NULL, 'Jefe de compañía', 8, '2026-04-11 20:36:53'),
+(14, 'ROTACIÓN DE MANDO', NULL, 'Jefe de batallón', 10, '2026-04-11 20:36:53'),
+(15, 'ROTACIÓN DE MANDO', NULL, 'En la conducta del semestre (calificación de sobresaliente)', 8, '2026-04-11 20:36:53'),
+(16, 'ACTIVIDADES DE LA VIDA DIARIA', NULL, 'Por destacarse en el cumplimiento de determinada tarea', 1, '2026-04-11 20:36:53'),
+(17, 'ACTIVIDADES DE LA VIDA DIARIA', NULL, 'Por no tener reportes durante la semana', 2, '2026-04-11 20:36:53'),
+(18, 'ACTIVIDADES DE LA VIDA DIARIA', NULL, 'Por destacarse en el Servicio de Guardia (3-5 méritos)', 3, '2026-04-11 20:36:53'),
+(19, 'ACTIVIDADES DE LA VIDA DIARIA', NULL, 'Por mantener un porte y aspecto esmerado', 3, '2026-04-11 20:36:53'),
+(20, 'ACTIVIDADES DE LA VIDA DIARIA', NULL, 'Por destacarse en el trabajo (3-5 méritos)', 3, '2026-04-11 20:36:53');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `oficial`
+--
+
+CREATE TABLE `oficial` (
+  `id` int(11) NOT NULL,
+  `nombre` text NOT NULL,
+  `apellidos` text NOT NULL,
+  `CI` text NOT NULL,
+  `Password` text NOT NULL,
+  `ocupacion` enum('teniente','primer_teniente','capitan','mayor','teniente_coronel','coronel','primer_coronel') DEFAULT 'teniente'
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `pelotones`
+--
+
+CREATE TABLE `pelotones` (
+  `id` int(11) NOT NULL,
+  `grado` varchar(10) COLLATE utf8_spanish_ci NOT NULL,
+  `numero_peloton` int(11) NOT NULL,
+  `año_escolar` varchar(9) COLLATE utf8_spanish_ci DEFAULT '2024-2025',
+  `activo` tinyint(1) DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+--
+-- Volcado de datos para la tabla `pelotones`
+--
+
+INSERT INTO `pelotones` (`id`, `grado`, `numero_peloton`, `año_escolar`, `activo`) VALUES
+(1, '10mo', 1, '2025-2026', 1),
+(2, '10mo', 2, '2025-2026', 1),
+(3, '10mo', 3, '2025-2026', 1),
+(4, '11no', 4, '2025-2026', 1),
+(5, '11no', 5, '2025-2026', 1),
+(6, '11no', 6, '2025-2026', 1),
+(7, '12mo', 7, '2025-2026', 1),
+(8, '12mo', 8, '2025-2026', 1),
+(9, '12mo', 9, '2025-2026', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `profesor`
+--
+
+CREATE TABLE `profesor` (
+  `id` int(11) NOT NULL,
+  `nombre` text NOT NULL,
+  `apellidos` text NOT NULL,
+  `CI` text NOT NULL,
+  `password` text NOT NULL,
+  `ocupacion` enum('matematicas','historia','fisica','quimica','ingles','literatura_lengua','preparacion_fisica','cultura_politica','preparacion_ciudadana','panorama_cultura_cubana','informatica','biblioteca','biologia','geografia','secretaria','otro') DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+--
+-- Volcado de datos para la tabla `profesor`
+--
+
+INSERT INTO `profesor` (`id`, `nombre`, `apellidos`, `CI`, `password`, `ocupacion`) VALUES
+(1, 'Mayelis', 'Rodríguez García ', '9484844384', 'EMCC2026', 'matematicas'),
+(2, 'Leaned', 'Tallez Mora', '8468383847', 'EMCC2026', 'informatica');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `tutorial_visto`
+--
+
+CREATE TABLE `tutorial_visto` (
+  `id` int(11) NOT NULL,
+  `usuario_id` int(11) NOT NULL,
+  `usuario_cargo` varchar(20) COLLATE utf8_spanish_ci NOT NULL,
+  `visto` tinyint(1) DEFAULT '0',
+  `fecha_visto` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
+
+--
+-- Índices para tablas volcadas
+--
+
+--
+-- Indices de la tabla `actividad`
+--
+ALTER TABLE `actividad`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_star` (`id_star`),
+  ADD KEY `id_end` (`id_end`),
+  ADD KEY `tipo` (`tipo`),
+  ADD KEY `fecha` (`fecha`),
+  ADD KEY `idx_leido` (`leido`);
+
+--
+-- Indices de la tabla `asignaturas`
+--
+ALTER TABLE `asignaturas`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `demeritos`
+--
+ALTER TABLE `demeritos`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `categoria` (`categoria`);
+
+--
+-- Indices de la tabla `directiva`
+--
+ALTER TABLE `directiva`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `estudiante`
+--
+ALTER TABLE `estudiante`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `horario_asignaturas`
+--
+ALTER TABLE `horario_asignaturas`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_horario` (`peloton_id`,`dia_semana`,`turno_inicio`,`semana`),
+  ADD KEY `asignatura_id` (`asignatura_id`);
+
+--
+-- Indices de la tabla `horario_config`
+--
+ALTER TABLE `horario_config`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `meritos`
+--
+ALTER TABLE `meritos`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `categoria` (`categoria`);
+
+--
+-- Indices de la tabla `oficial`
+--
+ALTER TABLE `oficial`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `pelotones`
+--
+ALTER TABLE `pelotones`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_peloton` (`grado`,`numero_peloton`,`año_escolar`);
+
+--
+-- Indices de la tabla `profesor`
+--
+ALTER TABLE `profesor`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `tutorial_visto`
+--
+ALTER TABLE `tutorial_visto`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_usuario` (`usuario_id`,`usuario_cargo`);
+
+--
+-- AUTO_INCREMENT de las tablas volcadas
+--
+
+--
+-- AUTO_INCREMENT de la tabla `actividad`
+--
+ALTER TABLE `actividad`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `asignaturas`
+--
+ALTER TABLE `asignaturas`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT de la tabla `demeritos`
+--
+ALTER TABLE `demeritos`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=123;
+
+--
+-- AUTO_INCREMENT de la tabla `directiva`
+--
+ALTER TABLE `directiva`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT de la tabla `estudiante`
+--
+ALTER TABLE `estudiante`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=288;
+
+--
+-- AUTO_INCREMENT de la tabla `horario_asignaturas`
+--
+ALTER TABLE `horario_asignaturas`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT de la tabla `horario_config`
+--
+ALTER TABLE `horario_config`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT de la tabla `meritos`
+--
+ALTER TABLE `meritos`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+
+--
+-- AUTO_INCREMENT de la tabla `oficial`
+--
+ALTER TABLE `oficial`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `pelotones`
+--
+ALTER TABLE `pelotones`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT de la tabla `profesor`
+--
+ALTER TABLE `profesor`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT de la tabla `tutorial_visto`
+--
+ALTER TABLE `tutorial_visto`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- Restricciones para tablas volcadas
+--
+
+--
+-- Filtros para la tabla `actividad`
+--
+ALTER TABLE `actividad`
+  ADD CONSTRAINT `actividad_ibfk_1` FOREIGN KEY (`id_star`) REFERENCES `estudiante` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `actividad_ibfk_2` FOREIGN KEY (`id_end`) REFERENCES `estudiante` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `horario_asignaturas`
+--
+ALTER TABLE `horario_asignaturas`
+  ADD CONSTRAINT `horario_asignaturas_ibfk_1` FOREIGN KEY (`peloton_id`) REFERENCES `pelotones` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `horario_asignaturas_ibfk_2` FOREIGN KEY (`asignatura_id`) REFERENCES `asignaturas` (`id`) ON DELETE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
