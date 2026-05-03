@@ -1,5 +1,5 @@
 name: sistema_escolar
-description: Sistema de Gestión Escolar EMCC - Modo P2P sin servidor
+description: Sistema de Gestion Escolar EMCC - Modo P2P sin servidor
 
 publish_to: 'none'
 
@@ -28,7 +28,6 @@ dependencies:
   qr_flutter: ^4.1.0
   
   # P2P
-  wifi_direct: ^0.0.1
   connectivity_plus: ^5.0.2
   permission_handler: ^11.1.0
 
@@ -40,6 +39,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/icon/
 
 flutter_launcher_icons:
   android: true
