@@ -1,7 +1,3 @@
-// ============================================
-// DATABASE_SERVICE.DART - CARGA DESDE SQL
-// ============================================
-
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
@@ -29,70 +25,16 @@ class DatabaseService {
   }
 
   static Future<void> _onCreate(Database db, int version) async {
-    // Cargar el archivo SQL
     final String sql = await rootBundle.loadString('assets/data/usuario_use.sql');
-    
-    // Dividir por instrucciones SQL
-    final statements = _splitSQL(sql);
-    
+    final statements = sql.split(';');
     for (final stmt in statements) {
       final trimmed = stmt.trim();
       if (trimmed.isNotEmpty && !trimmed.startsWith('--') && !trimmed.startsWith('/*')) {
-        try {
-          await db.execute(trimmed);
-        } catch (e) {
-          print('Error ejecutando SQL: ${trimmed.substring(0, 100)}... - $e');
-        }
+        try { await db.execute(trimmed); } catch (e) {}
       }
     }
   }
 
-  // ============================================
-  // DIVIDIR ARCHIVO SQL EN INSTRUCCIONES
-  // ============================================
-  static List<String> _splitSQL(String sql) {
-    final statements = <String>[];
-    final buffer = StringBuffer();
-    bool inString = false;
-    String? stringChar;
-
-    for (int i = 0; i < sql.length; i++) {
-      final char = sql[i];
-
-      // Detectar inicio/fin de string
-      if (!inString && (char == "'" || char == '"')) {
-        inString = true;
-        stringChar = char;
-      } else if (inString && char == stringChar) {
-        // Verificar que no sea escape
-        if (i + 1 < sql.length && sql[i + 1] == stringChar) {
-          buffer.write(char);
-          i++; // Saltar el siguiente
-          continue;
-        }
-        inString = false;
-        stringChar = null;
-      }
-
-      buffer.write(char);
-
-      // Fin de instrucción
-      if (!inString && char == ';') {
-        statements.add(buffer.toString());
-        buffer.clear();
-      }
-    }
-
-    // Última instrucción si no termina con ;
-    if (buffer.isNotEmpty) {
-      statements.add(buffer.toString());
-    }
-
-    return statements;
-  }
-    // ============================================
-  // MANEJO DE SESIÓN
-  // ============================================
   static Future<bool> initSession() async {
     final prefs = await SharedPreferences.getInstance();
     final usuarioJson = prefs.getString('usuario');
@@ -115,9 +57,6 @@ class DatabaseService {
     await prefs.clear();
   }
 
-  // ============================================
-  // LOGIN LOCAL
-  // ============================================
   static Future<Map<String, dynamic>> login(String nombre, String apellidos, String password, String cargo) async {
     final db = await database;
     String tabla;
@@ -135,30 +74,21 @@ class DatabaseService {
       await saveSession(usuario);
       return {'success': true, 'usuario': usuario.toJson()};
     }
-    return {'success': false, 'message': 'Usuario no encontrado o contraseña incorrecta'};
+    return {'success': false, 'message': 'Usuario no encontrado'};
   }
 
-  // ============================================
-  // BUSCAR ESTUDIANTES
-  // ============================================
   static Future<List<Map<String, dynamic>>> buscarEstudiantes(String query) async {
     final db = await database;
     final searchTerm = '%$query%';
     return await db.rawQuery("SELECT e.*, COALESCE((SELECT SUM(cantidad) FROM actividad WHERE id_end = 'estudiante_' || e.id AND tipo = 'merito'), 0) as meritos, COALESCE((SELECT SUM(cantidad) FROM actividad WHERE id_end = 'estudiante_' || e.id AND tipo = 'demerito'), 0) as demeritos FROM estudiante e WHERE e.nombre LIKE ? OR e.apellidos LIKE ? OR e.CI LIKE ? ORDER BY e.apellidos, e.nombre LIMIT 30", [searchTerm, searchTerm, searchTerm]);
   }
 
-  // ============================================
-  // OBTENER CATÁLOGO
-  // ============================================
   static Future<List<Map<String, dynamic>>> getCatalogo(String tipo) async {
     final db = await database;
     final tabla = tipo == 'merito' ? 'meritos' : 'demeritos';
     return await db.query(tabla, orderBy: 'categoria, id');
   }
 
-  // ============================================
-  // OBTENER DASHBOARD
-  // ============================================
   static Future<Map<String, dynamic>> getDashboard() async {
     final db = await database;
     final usuario = _usuario;
@@ -176,9 +106,6 @@ class DatabaseService {
     return {'success': true, 'usuario': usuario.toJson(), 'stats': {'meritos_semana': meritoTotal, 'demeritos_semana': demeritoTotal, 'balance_semana': meritoTotal - demeritoTotal}, 'semana_actual': actividades, 'semana_fecha': inicioSemanaStr, 'alarma_activa': false};
   }
 
-  // ============================================
-  // ENVIAR NOTIFICACIÓN
-  // ============================================
   static Future<Map<String, dynamic>> enviarNotificacion(Map<String, dynamic> data) async {
     final db = await database;
     final destinatarios = data['destinatarios'] as List<dynamic>;
@@ -200,9 +127,6 @@ class DatabaseService {
     return {'success': true, 'message': '$insertados actividades registradas'};
   }
 
-  // ============================================
-  // OBTENER PERFIL
-  // ============================================
   static Future<Map<String, dynamic>> getPerfil() async {
     final db = await database;
     final usuario = _usuario;
@@ -214,9 +138,6 @@ class DatabaseService {
     return {'success': true, 'perfil': usuario.toJson(), 'stats': {'meritos': meritos.first['total'] ?? 0, 'demeritos': demeritos.first['total'] ?? 0}, 'ultimas_actividades': ultimas};
   }
 
-  // ============================================
-  // VERIFICAR NOTIFICADOR TEMPORAL
-  // ============================================
   static Future<Map<String, dynamic>> verificarNotificador(String nombre, String password) async {
     final db = await database;
     final partes = nombre.trim().split(' ');

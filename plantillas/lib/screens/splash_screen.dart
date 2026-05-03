@@ -6,7 +6,6 @@ import 'dashboard_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
-
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
@@ -33,13 +32,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 
   Future<void> _verificarSesion() async {
-    final sesionActiva = await DatabaseService.initSession();
+    final sesionActiva = DatabaseService.isLoggedIn;
     if (!mounted) return;
-    if (sesionActiva) {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const DashboardScreen()));
-    } else {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
-    }
+    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => sesionActiva ? const DashboardScreen() : const LoginScreen()));
   }
 
   @override
@@ -50,30 +45,21 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         child: Center(
           child: AnimatedBuilder(
             animation: _controller,
-            builder: (context, child) {
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: ScaleTransition(
-                  scale: _scaleAnimation,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 120, height: 120,
-                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(30)),
-                        child: const Icon(Icons.school_rounded, size: 70, color: Colors.white),
-                      ),
-                      const SizedBox(height: 30),
-                      const Text('EMCC DIGITAL', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 2)),
-                      const SizedBox(height: 10),
-                      Text('Sistema de Gestión Escolar', style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.8), letterSpacing: 1)),
-                      const SizedBox(height: 50),
-                      SizedBox(width: 40, height: 40, child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withOpacity(0.8)), strokeWidth: 3)),
-                    ],
-                  ),
-                ),
-              );
-            },
+            builder: (context, child) => FadeTransition(
+              opacity: _fadeAnimation,
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Container(width: 120, height: 120, decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(30)), child: const Icon(Icons.school_rounded, size: 70, color: Colors.white)),
+                  const SizedBox(height: 30),
+                  const Text('EMCC DIGITAL', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 2)),
+                  const SizedBox(height: 10),
+                  Text('Sistema de Gestión Escolar', style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.8), letterSpacing: 1)),
+                  const SizedBox(height: 50),
+                  SizedBox(width: 40, height: 40, child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withOpacity(0.8)), strokeWidth: 3)),
+                ]),
+              ),
+            ),
           ),
         ),
       ),
