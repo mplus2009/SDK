@@ -21,9 +21,6 @@ dependencies:
   qr_flutter: ^4.1.0
   connectivity_plus: ^5.0.2
   permission_handler: ^11.1.0
-  flutter_local_notifications: ^17.0.0
-  workmanager: ^0.5.2
-  flutter_background_service: ^5.0.5
 
 dev_dependencies:
   flutter_test:
