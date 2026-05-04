@@ -6,8 +6,14 @@ import 'screens/splash_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  await DatabaseService.database;
-  await DatabaseService.initSession();
+  
+  try {
+    await DatabaseService.database;
+    await DatabaseService.initSession();
+  } catch (e) {
+    debugPrint('ERROR al iniciar BD: $e');
+  }
+  
   runApp(const SistemaEscolarApp());
 }
 
@@ -23,7 +29,6 @@ class SistemaEscolarApp extends StatelessWidget {
         primaryColor: const Color(0xFF1E3C72),
         scaffoldBackgroundColor: const Color(0xFFF0F4F8),
         appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF1E3C72), foregroundColor: Colors.white, elevation: 0),
-        elevatedButtonTheme: ElevatedButtonThemeData(style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E3C72), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)))),
       ),
       home: const SplashScreen(),
     );
