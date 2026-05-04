@@ -1,0 +1,39 @@
+name: sistema_escolar
+description: Sistema de Gestion Escolar EMCC
+publish_to: 'none'
+version: 4.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  shared_preferences: ^2.2.2
+  path_provider: ^2.1.1
+  mobile_scanner: ^3.5.7
+  qr_flutter: ^4.1.0
+  connectivity_plus: ^5.0.2
+  permission_handler: ^11.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icon/
+    - assets/data/usuario_use.sql
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#1E3C72"
+  adaptive_icon_foreground: "assets/icon/icon.png"
