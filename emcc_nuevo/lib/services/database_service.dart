@@ -54,15 +54,28 @@ class DatabaseService {
   }
 
   static Future<Map<String, dynamic>> login(String nombre, String apellidos, String password, String cargo) async {
-    final db = await database;
-    final r = await db.query(cargo, where: 'nombre=? AND apellidos=? AND password=?', whereArgs: [nombre, apellidos, password], limit: 1);
-    if (r.isNotEmpty) {
-      final u = r.first;
-      final usuario = Usuario(id: int.tryParse(u['id'].toString()) ?? 0, nombre: u['nombre'].toString(), apellidos: u['apellidos'].toString(), ci: (u['CI'] ?? '').toString(), cargo: cargo, ocupacion: u['ocupacion']?.toString(), grado: u['grado']?.toString(), peloton: int.tryParse(u['peloton']?.toString() ?? ''));
-      await saveSession(usuario);
-      return {'success': true};
+    try {
+      final db = await database;
+      final r = await db.query(cargo, where: 'nombre=? AND apellidos=? AND password=?', whereArgs: [nombre, apellidos, password], limit: 1);
+      if (r.isNotEmpty) {
+        final u = r.first;
+        final usuario = Usuario(
+          id: int.tryParse(u['id'].toString()) ?? 0,
+          nombre: u['nombre'].toString(),
+          apellidos: u['apellidos'].toString(),
+          ci: (u['CI'] ?? '').toString(),
+          cargo: cargo,
+          ocupacion: u['ocupacion']?.toString(),
+          grado: u['grado']?.toString(),
+          peloton: int.tryParse(u['peloton']?.toString() ?? ''),
+        );
+        await saveSession(usuario);
+        return {'success': true};
+      }
+      return {'success': false};
+    } catch (e) {
+      return {'success': false};
     }
-    return {'success': false};
   }
 
   static Future<List<Map<String, dynamic>>> buscarEstudiantes(String query) async {
