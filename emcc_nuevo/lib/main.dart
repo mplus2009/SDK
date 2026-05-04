@@ -7,12 +7,6 @@ import 'services/database_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  try {
-    await DatabaseService.database;
-    await DatabaseService.initSession();
-  } catch (e) {
-    debugPrint('Error BD: $e');
-  }
   runApp(const SistemaEscolarApp());
 }
 
@@ -27,7 +21,11 @@ class SistemaEscolarApp extends StatelessWidget {
         useMaterial3: true,
         primaryColor: const Color(0xFF1E3C72),
         scaffoldBackgroundColor: const Color(0xFFF0F4F8),
-        appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF1E3C72), foregroundColor: Colors.white, elevation: 0),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF1E3C72),
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
       ),
       home: const SplashScreen(),
     );
@@ -51,6 +49,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _iniciar() async {
     try {
+      await DatabaseService.database;
+      await DatabaseService.initSession();
       if (!mounted) return;
       if (DatabaseService.isLoggedIn) {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardScreen()));
@@ -59,7 +59,7 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = '$e');
+      setState(() => _error = 'Error: $e');
     }
   }
 
@@ -67,13 +67,18 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     if (_error != null) {
       return Scaffold(
-        body: Center(child: Padding(padding: const EdgeInsets.all(20), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const Icon(Icons.error, size: 60, color: Colors.red),
-          const SizedBox(height: 20),
-          Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 14), textAlign: TextAlign.center),
-          const SizedBox(height: 20),
-          ElevatedButton(onPressed: () { setState(() => _error = null); _iniciar(); }, child: const Text('Reintentar')),
-        ]))),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              const Icon(Icons.error, size: 60, color: Colors.red),
+              const SizedBox(height: 20),
+              Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 14), textAlign: TextAlign.center),
+              const SizedBox(height: 20),
+              ElevatedButton(onPressed: () { setState(() => _error = null); _iniciar(); }, child: const Text('Reintentar')),
+            ]),
+          ),
+        ),
       );
     }
     return Scaffold(

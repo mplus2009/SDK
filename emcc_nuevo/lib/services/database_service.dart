@@ -65,16 +65,16 @@ class DatabaseService {
       case 'profesor': tabla = 'profesor'; break;
       case 'oficial': tabla = 'oficial'; break;
       case 'directiva': tabla = 'directiva'; break;
-      default: return {'success': false, 'message': 'Cargo no válido'};
+      default: return {'success': false};
     }
-    final resultados = await db.query(tabla, where: 'nombre = ? AND apellidos = ? AND password = ?', whereArgs: [nombre, apellidos, password], limit: 1);
-    if (resultados.isNotEmpty) {
-      final user = resultados.first;
-      final usuario = Usuario(id: user['id'] as int, nombre: user['nombre'] as String, apellidos: user['apellidos'] as String, ci: user['CI'] as String? ?? user['ci'] as String? ?? '', cargo: cargo, ocupacion: user['ocupacion'] as String?, grado: user['grado'] as String?, peloton: user['peloton'] as int?);
+    final r = await db.query(tabla, where: 'nombre = ? AND apellidos = ? AND password = ?', whereArgs: [nombre, apellidos, password], limit: 1);
+    if (r.isNotEmpty) {
+      final u = r.first;
+      final usuario = Usuario(id: u['id'] as int, nombre: u['nombre'] as String, apellidos: u['apellidos'] as String, ci: (u['CI'] ?? u['ci'] ?? '') as String, cargo: cargo, ocupacion: u['ocupacion'] as String?, grado: u['grado'] as String?, peloton: u['peloton'] as int?);
       await saveSession(usuario);
       return {'success': true, 'usuario': usuario.toJson()};
     }
-    return {'success': false, 'message': 'Usuario no encontrado'};
+    return {'success': false};
   }
 
   static Future<List<Map<String, dynamic>>> buscarEstudiantes(String query) async {
@@ -89,18 +89,15 @@ class DatabaseService {
 
   static Future<Map<String, dynamic>> getDashboard() async {
     final db = await database;
-    final usuario = _usuario;
-    if (usuario == null) return {'success': false};
-    final idFormateado = '${usuario.cargo}_${usuario.id}';
+    if (_usuario == null) return {'success': false};
+    final idF = '${_usuario!.cargo}_${_usuario!.id}';
     final hoy = DateTime.now();
-    final diasHastaMiercoles = hoy.weekday >= 3 ? hoy.weekday - 3 : hoy.weekday + 4;
-    final inicioSemana = hoy.subtract(Duration(days: diasHastaMiercoles)).toString().split(' ')[0];
-    final meritos = await db.rawQuery('SELECT COALESCE(SUM(cantidad),0) as t FROM actividad WHERE id_end=? AND tipo=? AND fecha>=?', [idFormateado, 'merito', inicioSemana]);
-    final demeritos = await db.rawQuery('SELECT COALESCE(SUM(cantidad),0) as t FROM actividad WHERE id_end=? AND tipo=? AND fecha>=?', [idFormateado, 'demerito', inicioSemana]);
-    final act = await db.query('actividad', where: 'id_end=? AND fecha>=?', whereArgs: [idFormateado, inicioSemana], orderBy: 'fecha DESC, hora DESC');
-    final m = meritos.first['t'] as int? ?? 0;
-    final d = demeritos.first['t'] as int? ?? 0;
-    return {'success': true, 'stats': {'meritos_semana': m, 'demeritos_semana': d, 'balance_semana': m - d}, 'semana_actual': act, 'semana_fecha': inicioSemana, 'alarma_activa': false};
+    final dias = hoy.weekday >= 3 ? hoy.weekday - 3 : hoy.weekday + 4;
+    final inicio = hoy.subtract(Duration(days: dias)).toString().split(' ')[0];
+    final m = await db.rawQuery('SELECT COALESCE(SUM(cantidad),0) as t FROM actividad WHERE id_end=? AND tipo=? AND fecha>=?', [idF, 'merito', inicio]);
+    final d = await db.rawQuery('SELECT COALESCE(SUM(cantidad),0) as t FROM actividad WHERE id_end=? AND tipo=? AND fecha>=?', [idF, 'demerito', inicio]);
+    final act = await db.query('actividad', where: 'id_end=? AND fecha>=?', whereArgs: [idF, inicio], orderBy: 'fecha DESC, hora DESC');
+    return {'success': true, 'stats': {'meritos_semana': m.first['t'] ?? 0, 'demeritos_semana': d.first['t'] ?? 0, 'balance_semana': ((m.first['t'] as int?) ?? 0) - ((d.first['t'] as int?) ?? 0)}, 'semana_actual': act, 'semana_fecha': inicio, 'alarma_activa': false};
   }
 
   static Future<Map<String, dynamic>> enviarNotificacion(Map<String, dynamic> data) async {
@@ -115,9 +112,8 @@ class DatabaseService {
 
   static Future<Map<String, dynamic>> getPerfil() async {
     final db = await database;
-    final u = _usuario;
-    if (u == null) return {'success': false};
-    final idF = '${u.cargo}_${u.id}';
+    if (_usuario == null) return {'success': false};
+    final idF = '${_usuario!.cargo}_${_usuario!.id}';
     final m = await db.rawQuery('SELECT COALESCE(SUM(cantidad),0) as t FROM actividad WHERE id_end=? AND tipo=?', [idF, 'merito']);
     final d = await db.rawQuery('SELECT COALESCE(SUM(cantidad),0) as t FROM actividad WHERE id_end=? AND tipo=?', [idF, 'demerito']);
     final ult = await db.query('actividad', where: 'id_end=?', whereArgs: [idF], orderBy: 'fecha DESC, hora DESC', limit: 20);
@@ -126,9 +122,9 @@ class DatabaseService {
 
   static Future<Map<String, dynamic>> verificarNotificador(String nombre, String password) async {
     final db = await database;
-    final partes = nombre.trim().split(' ');
-    final nom = partes.isNotEmpty ? partes[0] : '';
-    final ap = partes.length > 1 ? partes.sublist(1).join(' ') : '';
+    final p = nombre.trim().split(' ');
+    final nom = p.isNotEmpty ? p[0] : '';
+    final ap = p.length > 1 ? p.sublist(1).join(' ') : '';
     for (final t in ['estudiante', 'profesor', 'oficial', 'directiva']) {
       final r = await db.query(t, where: 'nombre=? AND apellidos=? AND password=?', whereArgs: [nom, ap, password], limit: 1);
       if (r.isNotEmpty) return {'success': true, 'id': r.first['id'], 'nombre': '${r.first['nombre']} ${r.first['apellidos']}', 'cargo': t};

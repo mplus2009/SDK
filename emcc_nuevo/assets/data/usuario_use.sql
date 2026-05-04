@@ -1,64 +1,23 @@
--- phpMyAdmin SQL Dump
--- version 5.2.3
--- https://www.phpmyadmin.net/
---
--- Servidor: localhost
--- Tiempo de generación: 03-05-2026 a las 14:11:23
--- Versión del servidor: 5.7.34
--- Versión de PHP: 8.2.29
-
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
-
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
---
--- Base de datos: `usuario_use`
---
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `actividad`
---
-
 CREATE TABLE `actividad` (
-  `id` int(11) NOT NULL,
-  `id_star` int(11) NOT NULL COMMENT 'ID de quien registra (profesor/oficial/directiva)',
-  `id_end` int(11) NOT NULL COMMENT 'ID del estudiante que recibe el mérito/demérito',
-  `tipo` enum('merito','demerito') COLLATE utf8_spanish_ci NOT NULL COMMENT 'Tipo de actividad: mérito o demérito',
-  `categoria` varchar(100) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Categoría de la falta o mérito',
-  `falta_causa` varchar(255) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Descripción de la falta o causa del mérito',
-  `cantidad` int(11) NOT NULL COMMENT 'Cantidad de méritos o deméritos asignados',
-  `fecha` date NOT NULL COMMENT 'Fecha del suceso',
-  `hora` time NOT NULL COMMENT 'Hora del suceso',
-  `leido` tinyint(1) NOT NULL DEFAULT '0' COMMENT '0 = No leído, 1 = Leído',
-  `observaciones` text COLLATE utf8_spanish_ci COMMENT 'Observaciones adicionales',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `asignaturas`
---
-
+  `id` INTEGER ,
+  `id_star` INTEGER  ,
+  `id_end` INTEGER  ,
+  `tipo` TEXT   ,
+  `categoria` TEXT   ,
+  `falta_causa` TEXT   ,
+  `cantidad` INTEGER  ,
+  `fecha` date  ,
+  `hora` time  ,
+  `leido` INTEGER  DEFAULT '0' ,
+  `observaciones` TEXT  ,
+  `created_at` timestamp  DEFAULT CURRENT_TIMESTAMP
+)  DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 CREATE TABLE `asignaturas` (
-  `id` int(11) NOT NULL,
-  `nombre` varchar(100) COLLATE utf8_spanish_ci NOT NULL,
-  `abreviatura` varchar(10) COLLATE utf8_spanish_ci NOT NULL,
-  `color_default` varchar(7) COLLATE utf8_spanish_ci DEFAULT '#e8f0fe'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
-
---
--- Volcado de datos para la tabla `asignaturas`
---
-
+  `id` INTEGER ,
+  `nombre` TEXT  ,
+  `abreviatura` TEXT  ,
+  `color_default` TEXT  DEFAULT '#e8f0fe'
+)  DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 INSERT INTO `asignaturas` (`id`, `nombre`, `abreviatura`, `color_default`) VALUES
 (1, 'Matemática', 'MAT', '#e8f0fe'),
 (2, 'Historia de Cuba', 'HIST', '#fef3c7'),
@@ -72,27 +31,15 @@ INSERT INTO `asignaturas` (`id`, `nombre`, `abreviatura`, `color_default`) VALUE
 (10, 'Informática', 'INF', '#cffafe'),
 (11, 'Biología', 'BIO', '#ccfbf1'),
 (12, 'Geografía', 'GEO', '#f1f5f9');
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `demeritos`
---
-
 CREATE TABLE `demeritos` (
-  `id` int(11) NOT NULL,
-  `categoria` varchar(100) COLLATE utf8_spanish_ci NOT NULL COMMENT 'FORMACIÓN ÉTICA, CUARTEL, UNIFORME, etc.',
-  `subcategoria` varchar(100) COLLATE utf8_spanish_ci DEFAULT NULL COMMENT 'SERVICIO DE GUARDIA, DURANTE LA MARCHA, etc.',
-  `falta` varchar(255) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Descripción de la falta',
-  `demeritos_10mo` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Rango de deméritos para 10mo grado (ej: 1-3, 4-6, 6-11)',
-  `demeritos_11_12` varchar(20) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Rango de deméritos para 11no y 12mo grados',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
-
---
--- Volcado de datos para la tabla `demeritos`
---
-
+  `id` INTEGER ,
+  `categoria` TEXT   ,
+  `subcategoria` TEXT   ,
+  `falta` TEXT   ,
+  `demeritos_10mo` TEXT   ,
+  `demeritos_11_12` TEXT   ,
+  `created_at` timestamp  DEFAULT CURRENT_TIMESTAMP
+)  DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 INSERT INTO `demeritos` (`id`, `categoria`, `subcategoria`, `falta`, `demeritos_10mo`, `demeritos_11_12`, `created_at`) VALUES
 (1, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'No rendir cortesía', '1-3', '4-8', '2026-04-11 20:32:23'),
 (2, 'FORMACIÓN ÉTICA Y PROFESIONAL', NULL, 'Saludar incorrectamente', '1', '1-3', '2026-04-11 20:32:23'),
@@ -216,50 +163,26 @@ INSERT INTO `demeritos` (`id`, `categoria`, `subcategoria`, `falta`, `demeritos_
 (120, 'CLASES Y ESTUDIOS INDEPENDIENTE', NULL, 'No cumplir las tareas en clases o el estudio individual', '2-4', '6-11', '2026-04-11 20:35:51'),
 (121, 'CLASES Y ESTUDIOS INDEPENDIENTE', NULL, 'Dormir en clase o estudio individual', '1-3', '3-5', '2026-04-11 20:35:51'),
 (122, 'CLASES Y ESTUDIOS INDEPENDIENTE', NULL, 'No tener los libros conservados y con forro', '1-3', '3-5', '2026-04-11 20:35:51');
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `directiva`
---
-
 CREATE TABLE `directiva` (
-  `id` int(11) NOT NULL,
-  `nombre` text NOT NULL,
-  `Apellidos` text NOT NULL,
-  `CI` text NOT NULL,
-  `password` text NOT NULL,
-  `ocupacion` enum('director','subdirector_general','subdirector_docente','politico','jefe_batallon') DEFAULT 'subdirector_docente'
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
---
--- Volcado de datos para la tabla `directiva`
---
-
+  `id` INTEGER ,
+  `nombre` TEXT ,
+  `Apellidos` TEXT ,
+  `CI` TEXT ,
+  `password` TEXT ,
+  `ocupacion` TEXT DEFAULT 'subdirector_docente'
+)  DEFAULT CHARSET=utf8;
 INSERT INTO `directiva` (`id`, `nombre`, `Apellidos`, `CI`, `password`, `ocupacion`) VALUES
 (1, 'Jorge ', 'LEGRÁ BORGES ', '83844838384', 'EMCC2026', 'director');
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `estudiante`
---
-
 CREATE TABLE `estudiante` (
-  `id` int(11) NOT NULL,
-  `nombre` text COLLATE utf8_spanish_ci NOT NULL,
-  `apellidos` text COLLATE utf8_spanish_ci NOT NULL,
-  `CI` text COLLATE utf8_spanish_ci NOT NULL,
-  `password` text COLLATE utf8_spanish_ci NOT NULL,
-  `grado` varchar(10) COLLATE utf8_spanish_ci DEFAULT NULL,
-  `peloton` int(11) DEFAULT '1',
-  `ocupacion` enum('ninguno','activista','jefe_escuadra','politico_peloton','2do_jefe_peloton','1er_jefe_peloton','politico_compania','2do_jefe_compania','1er_jefe_compania','sargento_mayor','2do_jefe_batallon','jefe_batallon') COLLATE utf8_spanish_ci DEFAULT 'ninguno'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
-
---
--- Volcado de datos para la tabla `estudiante`
---
-
+  `id` INTEGER ,
+  `nombre` TEXT  ,
+  `apellidos` TEXT  ,
+  `CI` TEXT  ,
+  `password` TEXT  ,
+  `grado` TEXT  ,
+  `peloton` INTEGER DEFAULT '1',
+  `ocupacion` TEXT  DEFAULT 'ninguno'
+)  DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 INSERT INTO `estudiante` (`id`, `nombre`, `apellidos`, `CI`, `password`, `grado`, `peloton`, `ocupacion`) VALUES
 (1, 'Esthailer', 'Alba Fernández', '10112864826', 'EMCC2026', '10mo', 1, 'ninguno'),
 (2, 'Ayamey Arialis', 'Bray Hernández', '10071068817', 'EMCC2026', '10mo', 1, 'ninguno'),
@@ -476,80 +399,44 @@ INSERT INTO `estudiante` (`id`, `nombre`, `apellidos`, `CI`, `password`, `grado`
 (285, 'Frank Amed', 'Rizo García', '10111563329', 'EMCC2026', '10mo', 1, 'ninguno'),
 (286, 'Annara S', 'Rodriguez Moreno', '10112066930', 'EMCC2026', '10mo', 1, 'ninguno'),
 (287, 'Manuel Alejandro', 'Sánchez Coello', '10010467820', 'EMCC2026', '10mo', 1, 'ninguno');
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `horario_asignaturas`
---
-
 CREATE TABLE `horario_asignaturas` (
-  `id` int(11) NOT NULL,
-  `peloton_id` int(11) NOT NULL,
-  `dia_semana` tinyint(4) NOT NULL COMMENT '1=Lunes, 2=Martes, 3=Miércoles, 4=Jueves, 5=Viernes, 6=Sábado',
-  `turno_inicio` tinyint(4) NOT NULL,
-  `turnos_duracion` tinyint(4) DEFAULT '1',
-  `asignatura_id` int(11) NOT NULL,
-  `tipo_evento` enum('asignatura','tcp','prueba_final','evento_especial') COLLATE utf8_spanish_ci DEFAULT 'asignatura',
-  `semana` enum('esta','proxima') COLLATE utf8_spanish_ci DEFAULT 'esta'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
-
---
--- Volcado de datos para la tabla `horario_asignaturas`
---
-
+  `id` INTEGER ,
+  `peloton_id` INTEGER ,
+  `dia_semana` INTEGER  ,
+  `turno_inicio` INTEGER ,
+  `turnos_duracion` INTEGER DEFAULT '1',
+  `asignatura_id` INTEGER ,
+  `tipo_evento` TEXT  DEFAULT 'asignatura',
+  `semana` TEXT  DEFAULT 'esta'
+)  DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 INSERT INTO `horario_asignaturas` (`id`, `peloton_id`, `dia_semana`, `turno_inicio`, `turnos_duracion`, `asignatura_id`, `tipo_evento`, `semana`) VALUES
 (1, 4, 1, 1, 2, 10, 'asignatura', 'esta'),
 (2, 4, 1, 3, 1, 2, 'asignatura', 'esta'),
 (3, 4, 1, 4, 1, 5, 'asignatura', 'esta'),
 (4, 4, 1, 5, 1, 3, 'asignatura', 'esta'),
 (6, 1, 1, 1, 45, 12, 'asignatura', 'esta');
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `horario_config`
---
-
 CREATE TABLE `horario_config` (
-  `id` int(11) NOT NULL,
+  `id` INTEGER ,
   `hora_inicio` time DEFAULT '08:00:00',
-  `duracion_turno_lunes_jueves` int(11) DEFAULT '45',
-  `duracion_turno_viernes` int(11) DEFAULT '40',
-  `descanso_entre_turnos` int(11) DEFAULT '5',
-  `merienda_despues_turno` int(11) DEFAULT '3',
-  `duracion_merienda` int(11) DEFAULT '15',
-  `viernes_con_merienda` tinyint(1) DEFAULT '0',
-  `sabado_con_clases` tinyint(1) DEFAULT '0',
-  `ultima_actualizacion` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
-
---
--- Volcado de datos para la tabla `horario_config`
---
-
+  `duracion_turno_lunes_jueves` INTEGER DEFAULT '45',
+  `duracion_turno_viernes` INTEGER DEFAULT '40',
+  `descanso_entre_turnos` INTEGER DEFAULT '5',
+  `merienda_despues_turno` INTEGER DEFAULT '3',
+  `duracion_merienda` INTEGER DEFAULT '15',
+  `viernes_con_merienda` INTEGER DEFAULT '0',
+  `sabado_con_clases` INTEGER DEFAULT '0',
+  `ultima_actualizacion` timestamp  DEFAULT CURRENT_TIMESTAMP 
+)  DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 INSERT INTO `horario_config` (`id`, `hora_inicio`, `duracion_turno_lunes_jueves`, `duracion_turno_viernes`, `descanso_entre_turnos`, `merienda_despues_turno`, `duracion_merienda`, `viernes_con_merienda`, `sabado_con_clases`, `ultima_actualizacion`) VALUES
 (1, '08:00:00', 45, 40, 5, 3, 15, 0, 0, '2026-04-17 00:18:28');
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `meritos`
---
-
 CREATE TABLE `meritos` (
-  `id` int(11) NOT NULL,
-  `categoria` varchar(100) COLLATE utf8_spanish_ci NOT NULL COMMENT 'PROCESO DOCENTE, ACTIVIDADES CIENTÍFICAS, VIDA DIARIA, etc.',
-  `subcategoria` varchar(100) COLLATE utf8_spanish_ci DEFAULT NULL COMMENT 'NIVEL MUNICIPAL, PROVINCIAL, ROTACIÓN DE MANDO, etc.',
-  `causa` varchar(255) COLLATE utf8_spanish_ci NOT NULL COMMENT 'Descripción de la causa del mérito',
-  `meritos` int(11) NOT NULL COMMENT 'Cantidad de méritos otorgados',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
-
---
--- Volcado de datos para la tabla `meritos`
---
-
+  `id` INTEGER ,
+  `categoria` TEXT   ,
+  `subcategoria` TEXT   ,
+  `causa` TEXT   ,
+  `meritos` INTEGER  ,
+  `created_at` timestamp  DEFAULT CURRENT_TIMESTAMP
+)  DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 INSERT INTO `meritos` (`id`, `categoria`, `subcategoria`, `causa`, `meritos`, `created_at`) VALUES
 (1, 'ACTIVIDADES CIENTÍFICAS / DEPORTIVAS / CULTURALES', NULL, 'Por participar', 1, '2026-04-11 20:36:53'),
 (2, 'ACTIVIDADES CIENTÍFICAS / DEPORTIVAS / CULTURALES', NULL, 'Obtener 3er lugar', 3, '2026-04-11 20:36:53'),
@@ -571,40 +458,21 @@ INSERT INTO `meritos` (`id`, `categoria`, `subcategoria`, `causa`, `meritos`, `c
 (18, 'ACTIVIDADES DE LA VIDA DIARIA', NULL, 'Por destacarse en el Servicio de Guardia (3-5 méritos)', 3, '2026-04-11 20:36:53'),
 (19, 'ACTIVIDADES DE LA VIDA DIARIA', NULL, 'Por mantener un porte y aspecto esmerado', 3, '2026-04-11 20:36:53'),
 (20, 'ACTIVIDADES DE LA VIDA DIARIA', NULL, 'Por destacarse en el trabajo (3-5 méritos)', 3, '2026-04-11 20:36:53');
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `oficial`
---
-
 CREATE TABLE `oficial` (
-  `id` int(11) NOT NULL,
-  `nombre` text NOT NULL,
-  `apellidos` text NOT NULL,
-  `CI` text NOT NULL,
-  `Password` text NOT NULL,
-  `ocupacion` enum('teniente','primer_teniente','capitan','mayor','teniente_coronel','coronel','primer_coronel') DEFAULT 'teniente'
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `pelotones`
---
-
+  `id` INTEGER ,
+  `nombre` TEXT ,
+  `apellidos` TEXT ,
+  `CI` TEXT ,
+  `Password` TEXT ,
+  `ocupacion` TEXT DEFAULT 'teniente'
+)  DEFAULT CHARSET=utf8;
 CREATE TABLE `pelotones` (
-  `id` int(11) NOT NULL,
-  `grado` varchar(10) COLLATE utf8_spanish_ci NOT NULL,
-  `numero_peloton` int(11) NOT NULL,
-  `año_escolar` varchar(9) COLLATE utf8_spanish_ci DEFAULT '2024-2025',
-  `activo` tinyint(1) DEFAULT '1'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
-
---
--- Volcado de datos para la tabla `pelotones`
---
-
+  `id` INTEGER ,
+  `grado` TEXT  ,
+  `numero_peloton` INTEGER ,
+  `año_escolar` TEXT  DEFAULT '2024-2025',
+  `activo` INTEGER DEFAULT '1'
+)  DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
 INSERT INTO `pelotones` (`id`, `grado`, `numero_peloton`, `año_escolar`, `activo`) VALUES
 (1, '10mo', 1, '2025-2026', 1),
 (2, '10mo', 2, '2025-2026', 1),
@@ -615,234 +483,60 @@ INSERT INTO `pelotones` (`id`, `grado`, `numero_peloton`, `año_escolar`, `activ
 (7, '12mo', 7, '2025-2026', 1),
 (8, '12mo', 8, '2025-2026', 1),
 (9, '12mo', 9, '2025-2026', 1);
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `profesor`
---
-
 CREATE TABLE `profesor` (
-  `id` int(11) NOT NULL,
-  `nombre` text NOT NULL,
-  `apellidos` text NOT NULL,
-  `CI` text NOT NULL,
-  `password` text NOT NULL,
-  `ocupacion` enum('matematicas','historia','fisica','quimica','ingles','literatura_lengua','preparacion_fisica','cultura_politica','preparacion_ciudadana','panorama_cultura_cubana','informatica','biblioteca','biologia','geografia','secretaria','otro') DEFAULT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
---
--- Volcado de datos para la tabla `profesor`
---
-
+  `id` INTEGER ,
+  `nombre` TEXT ,
+  `apellidos` TEXT ,
+  `CI` TEXT ,
+  `password` TEXT ,
+  `ocupacion` TEXT 
+)  DEFAULT CHARSET=utf8;
 INSERT INTO `profesor` (`id`, `nombre`, `apellidos`, `CI`, `password`, `ocupacion`) VALUES
 (1, 'Mayelis', 'Rodríguez García ', '9484844384', 'EMCC2026', 'matematicas'),
 (2, 'Leaned', 'Tallez Mora', '8468383847', 'EMCC2026', 'informatica');
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `tutorial_visto`
---
-
 CREATE TABLE `tutorial_visto` (
-  `id` int(11) NOT NULL,
-  `usuario_id` int(11) NOT NULL,
-  `usuario_cargo` varchar(20) COLLATE utf8_spanish_ci NOT NULL,
-  `visto` tinyint(1) DEFAULT '0',
-  `fecha_visto` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
-
---
--- Índices para tablas volcadas
---
-
---
--- Indices de la tabla `actividad`
---
-ALTER TABLE `actividad`
+  `id` INTEGER ,
+  `usuario_id` INTEGER ,
+  `usuario_cargo` TEXT  ,
+  `visto` INTEGER DEFAULT '0',
+  `fecha_visto` timestamp  DEFAULT CURRENT_TIMESTAMP
+)  DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
   ADD PRIMARY KEY (`id`),
   ADD KEY `id_star` (`id_star`),
   ADD KEY `id_end` (`id_end`),
   ADD KEY `tipo` (`tipo`),
   ADD KEY `fecha` (`fecha`),
   ADD KEY `idx_leido` (`leido`);
-
---
--- Indices de la tabla `asignaturas`
---
-ALTER TABLE `asignaturas`
   ADD PRIMARY KEY (`id`);
-
---
--- Indices de la tabla `demeritos`
---
-ALTER TABLE `demeritos`
   ADD PRIMARY KEY (`id`),
   ADD KEY `categoria` (`categoria`);
-
---
--- Indices de la tabla `directiva`
---
-ALTER TABLE `directiva`
   ADD PRIMARY KEY (`id`);
-
---
--- Indices de la tabla `estudiante`
---
-ALTER TABLE `estudiante`
   ADD PRIMARY KEY (`id`);
-
---
--- Indices de la tabla `horario_asignaturas`
---
-ALTER TABLE `horario_asignaturas`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `unique_horario` (`peloton_id`,`dia_semana`,`turno_inicio`,`semana`),
   ADD KEY `asignatura_id` (`asignatura_id`);
-
---
--- Indices de la tabla `horario_config`
---
-ALTER TABLE `horario_config`
   ADD PRIMARY KEY (`id`);
-
---
--- Indices de la tabla `meritos`
---
-ALTER TABLE `meritos`
   ADD PRIMARY KEY (`id`),
   ADD KEY `categoria` (`categoria`);
-
---
--- Indices de la tabla `oficial`
---
-ALTER TABLE `oficial`
   ADD PRIMARY KEY (`id`);
-
---
--- Indices de la tabla `pelotones`
---
-ALTER TABLE `pelotones`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `unique_peloton` (`grado`,`numero_peloton`,`año_escolar`);
-
---
--- Indices de la tabla `profesor`
---
-ALTER TABLE `profesor`
   ADD PRIMARY KEY (`id`);
-
---
--- Indices de la tabla `tutorial_visto`
---
-ALTER TABLE `tutorial_visto`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `unique_usuario` (`usuario_id`,`usuario_cargo`);
-
---
--- AUTO_INCREMENT de las tablas volcadas
---
-
---
--- AUTO_INCREMENT de la tabla `actividad`
---
-ALTER TABLE `actividad`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `asignaturas`
---
-ALTER TABLE `asignaturas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
-
---
--- AUTO_INCREMENT de la tabla `demeritos`
---
-ALTER TABLE `demeritos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=123;
-
---
--- AUTO_INCREMENT de la tabla `directiva`
---
-ALTER TABLE `directiva`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT de la tabla `estudiante`
---
-ALTER TABLE `estudiante`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=288;
-
---
--- AUTO_INCREMENT de la tabla `horario_asignaturas`
---
-ALTER TABLE `horario_asignaturas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
-
---
--- AUTO_INCREMENT de la tabla `horario_config`
---
-ALTER TABLE `horario_config`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT de la tabla `meritos`
---
-ALTER TABLE `meritos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
-
---
--- AUTO_INCREMENT de la tabla `oficial`
---
-ALTER TABLE `oficial`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `pelotones`
---
-ALTER TABLE `pelotones`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
-
---
--- AUTO_INCREMENT de la tabla `profesor`
---
-ALTER TABLE `profesor`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT de la tabla `tutorial_visto`
---
-ALTER TABLE `tutorial_visto`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- Restricciones para tablas volcadas
---
-
---
--- Filtros para la tabla `actividad`
---
-ALTER TABLE `actividad`
+  MODIFY `id` INTEGER  AUTOINCREMENT;
+  MODIFY `id` INTEGER  AUTOINCREMENT, AUTOINCREMENT=13;
+  MODIFY `id` INTEGER  AUTOINCREMENT, AUTOINCREMENT=123;
+  MODIFY `id` INTEGER  AUTOINCREMENT, AUTOINCREMENT=2;
+  MODIFY `id` INTEGER  AUTOINCREMENT, AUTOINCREMENT=288;
+  MODIFY `id` INTEGER  AUTOINCREMENT, AUTOINCREMENT=7;
+  MODIFY `id` INTEGER  AUTOINCREMENT, AUTOINCREMENT=2;
+  MODIFY `id` INTEGER  AUTOINCREMENT, AUTOINCREMENT=21;
+  MODIFY `id` INTEGER  AUTOINCREMENT;
+  MODIFY `id` INTEGER  AUTOINCREMENT, AUTOINCREMENT=10;
+  MODIFY `id` INTEGER  AUTOINCREMENT, AUTOINCREMENT=3;
+  MODIFY `id` INTEGER  AUTOINCREMENT, AUTOINCREMENT=5;
   ADD CONSTRAINT `actividad_ibfk_1` FOREIGN KEY (`id_star`) REFERENCES `estudiante` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `actividad_ibfk_2` FOREIGN KEY (`id_end`) REFERENCES `estudiante` (`id`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `horario_asignaturas`
---
-ALTER TABLE `horario_asignaturas`
   ADD CONSTRAINT `horario_asignaturas_ibfk_1` FOREIGN KEY (`peloton_id`) REFERENCES `pelotones` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `horario_asignaturas_ibfk_2` FOREIGN KEY (`asignatura_id`) REFERENCES `asignaturas` (`id`) ON DELETE CASCADE;
-COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-
-INSERT INTO directiva (id, nombre, apellidos, CI, password, ocupacion) VALUES (1, 'Jorge', 'Legrá Borges', '83844838384', 'EMCC2026', 'director');
-
-INSERT INTO profesor (id, nombre, apellidos, CI, password, ocupacion) VALUES (1, 'Mayelis', 'Rodríguez García', '9484844384', 'EMCC2026', 'matematicas');
-INSERT INTO profesor (id, nombre, apellidos, CI, password, ocupacion) VALUES (2, 'Leaned', 'Tallez Mora', '8468383847', 'EMCC2026', 'informatica');
-
-INSERT INTO oficial (id, nombre, apellidos, CI, password, ocupacion) VALUES (1, 'Carlos', 'Rodriguez', '99012345678', 'EMCC2026', 'capitan');
-INSERT INTO oficial (id, nombre, apellidos, CI, password, ocupacion) VALUES (2, 'Ana', 'Martinez', '99087654321', 'EMCC2026', 'primer_teniente');

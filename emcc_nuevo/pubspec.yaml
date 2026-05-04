@@ -30,10 +30,3 @@ flutter:
   assets:
     - assets/icon/
     - assets/data/usuario_use.sql
-
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: "assets/icon/icon.png"
-  adaptive_icon_background: "#1E3C72"
-  adaptive_icon_foreground: "assets/icon/icon.png"
