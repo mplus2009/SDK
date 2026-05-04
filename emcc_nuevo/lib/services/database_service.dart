@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/usuario.dart';
 
@@ -21,18 +23,12 @@ class DatabaseService {
   static Future<Database> _initDatabase() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'emcc_sistema.db');
-    return await openDatabase(path, version: 2, onCreate: _onCreate);
-  }
-
-  static Future<void> _onCreate(Database db, int version) async {
-    final String sql = await rootBundle.loadString('assets/data/usuario_use.sql');
-    final statements = sql.split(';');
-    for (final stmt in statements) {
-      final trimmed = stmt.trim();
-      if (trimmed.isNotEmpty && !trimmed.startsWith('--') && !trimmed.startsWith('/*')) {
-        try { await db.execute(trimmed); } catch (e) {}
-      }
+    if (!await File(path).exists()) {
+      final data = await rootBundle.load('assets/data/emcc_sistema.db');
+      final bytes = data.buffer.asUint8List();
+      await File(path).writeAsBytes(bytes);
     }
+    return await openDatabase(path, version: 4);
   }
 
   static Future<bool> initSession() async {
@@ -70,7 +66,7 @@ class DatabaseService {
     final r = await db.query(tabla, where: 'nombre = ? AND apellidos = ? AND password = ?', whereArgs: [nombre, apellidos, password], limit: 1);
     if (r.isNotEmpty) {
       final u = r.first;
-      final usuario = Usuario(id: u['id'] as int, nombre: u['nombre'] as String, apellidos: u['apellidos'] as String, ci: (u['CI'] ?? u['ci'] ?? '') as String, cargo: cargo, ocupacion: u['ocupacion'] as String?, grado: u['grado'] as String?, peloton: u['peloton'] as int?);
+      final usuario = Usuario(id: u['id'] as int, nombre: u['nombre'] as String, apellidos: u['apellidos'] as String, ci: (u['CI'] ?? '') as String, cargo: cargo, ocupacion: u['ocupacion'] as String?, grado: u['grado'] as String?, peloton: u['peloton'] as int?);
       await saveSession(usuario);
       return {'success': true, 'usuario': usuario.toJson()};
     }
@@ -97,7 +93,7 @@ class DatabaseService {
     final m = await db.rawQuery('SELECT COALESCE(SUM(cantidad),0) as t FROM actividad WHERE id_end=? AND tipo=? AND fecha>=?', [idF, 'merito', inicio]);
     final d = await db.rawQuery('SELECT COALESCE(SUM(cantidad),0) as t FROM actividad WHERE id_end=? AND tipo=? AND fecha>=?', [idF, 'demerito', inicio]);
     final act = await db.query('actividad', where: 'id_end=? AND fecha>=?', whereArgs: [idF, inicio], orderBy: 'fecha DESC, hora DESC');
-    return {'success': true, 'stats': {'meritos_semana': m.first['t'] ?? 0, 'demeritos_semana': d.first['t'] ?? 0, 'balance_semana': ((m.first['t'] as int?) ?? 0) - ((d.first['t'] as int?) ?? 0)}, 'semana_actual': act, 'semana_fecha': inicio, 'alarma_activa': false};
+    return {'success': true, 'stats': {'meritos_semana': (m.first['t'] as int?) ?? 0, 'demeritos_semana': (d.first['t'] as int?) ?? 0, 'balance_semana': ((m.first['t'] as int?) ?? 0) - ((d.first['t'] as int?) ?? 0)}, 'semana_actual': act, 'semana_fecha': inicio, 'alarma_activa': false};
   }
 
   static Future<Map<String, dynamic>> enviarNotificacion(Map<String, dynamic> data) async {
@@ -117,7 +113,7 @@ class DatabaseService {
     final m = await db.rawQuery('SELECT COALESCE(SUM(cantidad),0) as t FROM actividad WHERE id_end=? AND tipo=?', [idF, 'merito']);
     final d = await db.rawQuery('SELECT COALESCE(SUM(cantidad),0) as t FROM actividad WHERE id_end=? AND tipo=?', [idF, 'demerito']);
     final ult = await db.query('actividad', where: 'id_end=?', whereArgs: [idF], orderBy: 'fecha DESC, hora DESC', limit: 20);
-    return {'success': true, 'stats': {'meritos': m.first['t'] ?? 0, 'demeritos': d.first['t'] ?? 0}, 'ultimas_actividades': ult};
+    return {'success': true, 'stats': {'meritos': (m.first['t'] as int?) ?? 0, 'demeritos': (d.first['t'] as int?) ?? 0}, 'ultimas_actividades': ult};
   }
 
   static Future<Map<String, dynamic>> verificarNotificador(String nombre, String password) async {

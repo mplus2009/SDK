@@ -1,7 +1,7 @@
 name: sistema_escolar
 description: Sistema de Gestion Escolar EMCC
 publish_to: 'none'
-version: 4.0.0+1
+version: 4.1.0+1
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -29,4 +29,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon/
-    - assets/data/usuario_use.sql
+    - assets/data/emcc_sistema.db
