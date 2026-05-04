@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/database_service.dart';
+import '../config/app_strings.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -25,7 +26,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
     if (response['success'] == true) {
       setState(() { _perfilData = response; _isLoading = false; });
     } else {
-      setState(() { _error = response['message'] ?? 'Error'; _isLoading = false; });
+      setState(() { _error = response['message'] ?? AppStrings.error; _isLoading = false; });
     }
   }
 
@@ -38,11 +39,11 @@ class _PerfilScreenState extends State<PerfilScreen> {
     final balance = (stats?['meritos'] ?? 0) - (stats?['demeritos'] ?? 0);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mi Perfil'), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context))),
+      appBar: AppBar(title: const Text(AppStrings.myProfile)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text(_error!, style: const TextStyle(color: Colors.red)), const SizedBox(height: 15), ElevatedButton(onPressed: _cargarPerfil, child: const Text('Reintentar'))]))
+              ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text(_error!, style: const TextStyle(color: Colors.red)), const SizedBox(height: 15), ElevatedButton(onPressed: _cargarPerfil, child: const Text(AppStrings.retry))]))
               : RefreshIndicator(
                   onRefresh: _cargarPerfil,
                   child: SingleChildScrollView(
@@ -60,75 +61,59 @@ class _PerfilScreenState extends State<PerfilScreen> {
                           if (usuario?.cargo == 'estudiante') ...[
                             const SizedBox(height: 20),
                             Row(children: [
-                              _buildStatBox('${stats?['meritos'] ?? 0}', 'Méritos', const Color(0xFF10B981), Icons.emoji_events),
+                              _statBox('${stats?['meritos'] ?? 0}', AppStrings.meritos, const Color(0xFF10B981), Icons.emoji_events),
                               const SizedBox(width: 10),
-                              _buildStatBox('${stats?['demeritos'] ?? 0}', 'Deméritos', const Color(0xFFEF4444), Icons.warning_amber),
+                              _statBox('${stats?['demeritos'] ?? 0}', AppStrings.demeritos, const Color(0xFFEF4444), Icons.warning_amber),
                               const SizedBox(width: 10),
-                              _buildStatBox('$balance', 'Balance', balance >= 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444), Icons.balance),
+                              _statBox('$balance', AppStrings.balance, balance >= 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444), Icons.balance),
                             ]),
                             const SizedBox(height: 15),
-                            _buildMensajeEstado(balance),
+                            _mensajeEstado(balance),
                           ],
                         ]),
                       ),
                       const SizedBox(height: 20),
-                      _buildUltimasActividades(ultimas),
+                      _ultimasActividades(ultimas),
                     ]),
                   ),
                 ),
     );
   }
 
-  Widget _buildStatBox(String value, String label, Color color, IconData icon) {
-    return Expanded(
-      child: Container(padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(16)), child: Column(children: [
-        Icon(icon, size: 28, color: color), const SizedBox(height: 8),
-        Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: color)),
-        Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-      ])),
-    );
+  Widget _statBox(String value, String label, Color color, IconData icon) {
+    return Expanded(child: Container(padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(16)), child: Column(children: [Icon(icon, size: 28, color: color), const SizedBox(height: 8), Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: color)), Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)))])));
   }
 
-  Widget _buildMensajeEstado(int balance) {
+  Widget _mensajeEstado(int balance) {
     Color bg; IconData icon; String title; String msg;
-    if (balance > 0) { bg = const Color(0xFF10B981); icon = Icons.emoji_events; title = '¡Excelente!'; msg = 'Tienes más méritos que deméritos. ¡Sigue así!'; }
-    else if (balance < 0) { bg = const Color(0xFFEF4444); icon = Icons.warning_amber; title = 'Atención'; msg = 'Tienes más deméritos que méritos. ¡Esfuérzate más!'; }
-    else { bg = const Color(0xFFF59E0B); icon = Icons.balance; title = 'Equilibrado'; msg = 'Tus méritos y deméritos están igualados.'; }
+    if (balance > 0) { bg = const Color(0xFF10B981); icon = Icons.emoji_events; title = AppStrings.excellent; msg = AppStrings.excellentMsg; }
+    else if (balance < 0) { bg = const Color(0xFFEF4444); icon = Icons.warning_amber; title = AppStrings.attention; msg = AppStrings.attentionMsg; }
+    else { bg = const Color(0xFFF59E0B); icon = Icons.balance; title = AppStrings.balanced; msg = AppStrings.balancedMsg; }
     return Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(gradient: LinearGradient(colors: [bg, bg.withOpacity(0.8)]), borderRadius: BorderRadius.circular(20)), child: Column(children: [Icon(icon, size: 40, color: Colors.white), const SizedBox(height: 10), Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)), const SizedBox(height: 5), Text(msg, style: const TextStyle(color: Colors.white70, fontSize: 14))]));
   }
 
-  Widget _buildUltimasActividades(List<dynamic> actividades) {
+  Widget _ultimasActividades(List<dynamic> actividades) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Row(children: [Icon(Icons.history, color: Color(0xFF667EEA)), SizedBox(width: 8), Text('Últimas Actividades', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF1E3C72)))]),
+        const Row(children: [Icon(Icons.history, color: Color(0xFF667EEA)), SizedBox(width: 8), Text(AppStrings.lastActivities, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF1E3C72)))]),
         const SizedBox(height: 16),
         if (actividades.isEmpty)
-          const Center(child: Padding(padding: EdgeInsets.all(20), child: Text('No hay actividades recientes', style: TextStyle(color: Color(0xFF94A3B8)))))
+          const Center(child: Padding(padding: EdgeInsets.all(20), child: Text(AppStrings.noRecentActivities, style: TextStyle(color: Color(0xFF94A3B8)))))
         else
           ...actividades.map((act) {
             final esMerito = act['tipo'] == 'merito';
             return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: esMerito ? const Color(0xFFD1FAE5) : const Color(0xFFFEE2E2), borderRadius: BorderRadius.circular(12)),
               child: Row(children: [
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(act['falta_causa'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1E293B))),
-                  const SizedBox(height: 2),
-                  Text('${_formatearFecha(act['fecha'])} - ${act['notificador'] ?? 'Sistema'}', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
-                ])),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(act['falta_causa'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1E293B))), const SizedBox(height: 2), Text('${act['fecha'] ?? ''} - ${act['notificador'] ?? ''}', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)))])),
                 Text('${esMerito ? "+" : "-"}${act['cantidad']}', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18, color: esMerito ? const Color(0xFF065F46) : const Color(0xFF991B1B))),
               ]),
             );
           }),
       ]),
     );
-  }
-
-  String _formatearFecha(dynamic fecha) {
-    if (fecha == null) return '';
-    try { final d = DateTime.parse(fecha.toString()); return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}'; } catch (e) { return fecha.toString(); }
   }
 }

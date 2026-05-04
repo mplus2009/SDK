@@ -838,3 +838,11 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+INSERT INTO directiva (id, nombre, apellidos, CI, password, ocupacion) VALUES (1, 'Jorge', 'Legrá Borges', '83844838384', 'EMCC2026', 'director');
+
+INSERT INTO profesor (id, nombre, apellidos, CI, password, ocupacion) VALUES (1, 'Mayelis', 'Rodríguez García', '9484844384', 'EMCC2026', 'matematicas');
+INSERT INTO profesor (id, nombre, apellidos, CI, password, ocupacion) VALUES (2, 'Leaned', 'Tallez Mora', '8468383847', 'EMCC2026', 'informatica');
+
+INSERT INTO oficial (id, nombre, apellidos, CI, password, ocupacion) VALUES (1, 'Carlos', 'Rodriguez', '99012345678', 'EMCC2026', 'capitan');
+INSERT INTO oficial (id, nombre, apellidos, CI, password, ocupacion) VALUES (2, 'Ana', 'Martinez', '99087654321', 'EMCC2026', 'primer_teniente');
