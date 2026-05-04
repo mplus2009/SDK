@@ -79,102 +79,60 @@ class DatabaseService {
 
   static Future<List<Map<String, dynamic>>> buscarEstudiantes(String query) async {
     final db = await database;
-    final searchTerm = '%$query%';
-    return await db.rawQuery("SELECT e.*, COALESCE((SELECT SUM(cantidad) FROM actividad WHERE id_end = 'estudiante_' || e.id AND tipo = 'merito'), 0) as meritos, COALESCE((SELECT SUM(cantidad) FROM actividad WHERE id_end = 'estudiante_' || e.id AND tipo = 'demerito'), 0) as demeritos FROM estudiante e WHERE e.nombre LIKE ? OR e.apellidos LIKE ? OR e.CI LIKE ? ORDER BY e.apellidos, e.nombre LIMIT 30", [searchTerm, searchTerm, searchTerm]);
+    return await db.rawQuery("SELECT e.*, COALESCE((SELECT SUM(cantidad) FROM actividad WHERE id_end = 'estudiante_' || e.id AND tipo = 'merito'), 0) as meritos, COALESCE((SELECT SUM(cantidad) FROM actividad WHERE id_end = 'estudiante_' || e.id AND tipo = 'demerito'), 0) as demeritos FROM estudiante e WHERE e.nombre LIKE ? OR e.apellidos LIKE ? OR e.CI LIKE ? LIMIT 30", ['%$query%', '%$query%', '%$query%']);
   }
 
   static Future<List<Map<String, dynamic>>> getCatalogo(String tipo) async {
     final db = await database;
-    final tabla = tipo == 'merito' ? 'meritos' : 'demeritos';
-    return await db.query(tabla, orderBy: 'categoria, id');
+    return await db.query(tipo == 'merito' ? 'meritos' : 'demeritos', orderBy: 'id');
   }
 
   static Future<Map<String, dynamic>> getDashboard() async {
     final db = await database;
     final usuario = _usuario;
-    if (usuario == null) return {'success': false, 'message': 'No hay sesión'};
+    if (usuario == null) return {'success': false};
     final idFormateado = '${usuario.cargo}_${usuario.id}';
     final hoy = DateTime.now();
     final diasHastaMiercoles = hoy.weekday >= 3 ? hoy.weekday - 3 : hoy.weekday + 4;
-    final inicioSemana = hoy.subtract(Duration(days: diasHastaMiercoles));
-    final inicioSemanaStr = inicioSemana.toString().split(' ')[0];
-    
-    final meritosSemana = await db.rawQuery('SELECT COALESCE(SUM(cantidad), 0) as total FROM actividad WHERE id_end = ? AND tipo = ? AND fecha >= ?', [idFormateado, 'merito', inicioSemanaStr]);
-    final demeritosSemana = await db.rawQuery('SELECT COALESCE(SUM(cantidad), 0) as total FROM actividad WHERE id_end = ? AND tipo = ? AND fecha >= ?', [idFormateado, 'demerito', inicioSemanaStr]);
-    final meritoTotal = meritosSemana.first['total'] as int? ?? 0;
-    final demeritoTotal = demeritosSemana.first['total'] as int? ?? 0;
-    
-    final nuevasCount = await db.rawQuery('SELECT COUNT(*) as total FROM actividad WHERE id_end = ? AND leido = 0', [idFormateado]);
-    final nuevas = nuevasCount.first['total'] as int? ?? 0;
-    
-    final actividades = await db.query('actividad', where: 'id_end = ? AND fecha >= ?', whereArgs: [idFormateado, inicioSemanaStr], orderBy: 'fecha DESC, hora DESC');
-    
-    final semanasAnteriores = await db.rawQuery("SELECT fecha, COUNT(*) as total FROM actividad WHERE id_end = ? AND fecha < ? GROUP BY strftime('%Y-%W', fecha) ORDER BY fecha DESC LIMIT 4", [idFormateado, inicioSemanaStr]);
-    
-    // Alarma
-    bool alarmaActiva = false;
-    if (usuario.cargo == 'estudiante') {
-      final gradoEst = usuario.grado ?? '10mo';
-      final limites = {'10mo': 15, '11no': 11, '12mo': 10};
-      final limite = limites[gradoEst] ?? 15;
-      alarmaActiva = demeritoTotal >= limite;
-    }
-    
-    return {
-      'success': true, 'usuario': usuario.toJson(),
-      'stats': {'meritos_semana': meritoTotal, 'demeritos_semana': demeritoTotal, 'balance_semana': meritoTotal - demeritoTotal},
-      'semana_actual': actividades, 'semana_fecha': inicioSemanaStr,
-      'semanas_anteriores': semanasAnteriores, 'nuevas_actividades': nuevas,
-      'alarma_activa': alarmaActiva,
-    };
-  }
-
-  static Future<Map<String, dynamic>> getPerfil() async {
-    final db = await database;
-    final usuario = _usuario;
-    if (usuario == null) return {'success': false, 'message': 'No hay sesión'};
-    final idFormateado = '${usuario.cargo}_${usuario.id}';
-    final meritos = await db.rawQuery('SELECT COALESCE(SUM(cantidad), 0) as total FROM actividad WHERE id_end = ? AND tipo = ?', [idFormateado, 'merito']);
-    final demeritos = await db.rawQuery('SELECT COALESCE(SUM(cantidad), 0) as total FROM actividad WHERE id_end = ? AND tipo = ?', [idFormateado, 'demerito']);
-    final ultimas = await db.query('actividad', where: 'id_end = ?', whereArgs: [idFormateado], orderBy: 'fecha DESC, hora DESC', limit: 20);
-    final meritosCat = await db.rawQuery('SELECT categoria, SUM(cantidad) as total FROM actividad WHERE id_end = ? AND tipo = ? GROUP BY categoria ORDER BY total DESC', [idFormateado, 'merito']);
-    final demeritosCat = await db.rawQuery('SELECT categoria, SUM(cantidad) as total FROM actividad WHERE id_end = ? AND tipo = ? GROUP BY categoria ORDER BY total DESC', [idFormateado, 'demerito']);
-    return {'success': true, 'perfil': usuario.toJson(), 'stats': {'meritos': meritos.first['total'] ?? 0, 'demeritos': demeritos.first['total'] ?? 0}, 'ultimas_actividades': ultimas, 'meritos_por_categoria': meritosCat, 'demeritos_por_categoria': demeritosCat};
+    final inicioSemana = hoy.subtract(Duration(days: diasHastaMiercoles)).toString().split(' ')[0];
+    final meritos = await db.rawQuery('SELECT COALESCE(SUM(cantidad),0) as t FROM actividad WHERE id_end=? AND tipo=? AND fecha>=?', [idFormateado, 'merito', inicioSemana]);
+    final demeritos = await db.rawQuery('SELECT COALESCE(SUM(cantidad),0) as t FROM actividad WHERE id_end=? AND tipo=? AND fecha>=?', [idFormateado, 'demerito', inicioSemana]);
+    final act = await db.query('actividad', where: 'id_end=? AND fecha>=?', whereArgs: [idFormateado, inicioSemana], orderBy: 'fecha DESC, hora DESC');
+    final m = meritos.first['t'] as int? ?? 0;
+    final d = demeritos.first['t'] as int? ?? 0;
+    return {'success': true, 'stats': {'meritos_semana': m, 'demeritos_semana': d, 'balance_semana': m - d}, 'semana_actual': act, 'semana_fecha': inicioSemana, 'alarma_activa': false};
   }
 
   static Future<Map<String, dynamic>> enviarNotificacion(Map<String, dynamic> data) async {
     final db = await database;
-    final destinatarios = data['destinatarios'] as List<dynamic>;
-    final actividades = data['actividades'] as List<dynamic>;
-    final fecha = data['fecha'] as String;
-    final hora = data['hora'] as String;
-    final observaciones = data['observaciones'] as String? ?? '';
-    final idStar = data['id_star'] as String;
-    final cargoNotificador = data['cargo_notificador'] as String;
-    final idStarFormateado = '${cargoNotificador}_$idStar';
-    int insertados = 0;
-    for (final dest in destinatarios) {
-      final idEndFormateado = 'estudiante_${dest['id']}';
-      for (final act in actividades) {
-        await db.insert('actividad', {'id_star': idStarFormateado, 'id_end': idEndFormateado, 'tipo': act['tipo'], 'categoria': act['categoria'], 'falta_causa': act['nombre'], 'cantidad': act['cantidad'], 'fecha': fecha, 'hora': hora, 'observaciones': observaciones, 'leido': 0});
-        insertados++;
+    for (final dest in (data['destinatarios'] as List)) {
+      for (final act in (data['actividades'] as List)) {
+        await db.insert('actividad', {'id_star': '${data['cargo_notificador']}_${data['id_star']}', 'id_end': 'estudiante_${dest['id']}', 'tipo': act['tipo'], 'categoria': act['categoria'], 'falta_causa': act['nombre'], 'cantidad': act['cantidad'], 'fecha': data['fecha'], 'hora': data['hora'], 'observaciones': data['observaciones'] ?? '', 'leido': 0});
       }
     }
-    return {'success': true, 'message': '$insertados actividades registradas'};
+    return {'success': true};
+  }
+
+  static Future<Map<String, dynamic>> getPerfil() async {
+    final db = await database;
+    final u = _usuario;
+    if (u == null) return {'success': false};
+    final idF = '${u.cargo}_${u.id}';
+    final m = await db.rawQuery('SELECT COALESCE(SUM(cantidad),0) as t FROM actividad WHERE id_end=? AND tipo=?', [idF, 'merito']);
+    final d = await db.rawQuery('SELECT COALESCE(SUM(cantidad),0) as t FROM actividad WHERE id_end=? AND tipo=?', [idF, 'demerito']);
+    final ult = await db.query('actividad', where: 'id_end=?', whereArgs: [idF], orderBy: 'fecha DESC, hora DESC', limit: 20);
+    return {'success': true, 'stats': {'meritos': m.first['t'] ?? 0, 'demeritos': d.first['t'] ?? 0}, 'ultimas_actividades': ult};
   }
 
   static Future<Map<String, dynamic>> verificarNotificador(String nombre, String password) async {
     final db = await database;
     final partes = nombre.trim().split(' ');
     final nom = partes.isNotEmpty ? partes[0] : '';
-    final apell = partes.length > 1 ? partes.sublist(1).join(' ') : '';
-    for (final tabla in ['estudiante', 'profesor', 'oficial', 'directiva']) {
-      final results = await db.query(tabla, where: 'nombre = ? AND apellidos = ? AND password = ?', whereArgs: [nom, apell, password], limit: 1);
-      if (results.isNotEmpty) {
-        final user = results.first;
-        return {'success': true, 'id': user['id'], 'nombre': '${user['nombre']} ${user['apellidos']}', 'cargo': tabla};
-      }
+    final ap = partes.length > 1 ? partes.sublist(1).join(' ') : '';
+    for (final t in ['estudiante', 'profesor', 'oficial', 'directiva']) {
+      final r = await db.query(t, where: 'nombre=? AND apellidos=? AND password=?', whereArgs: [nom, ap, password], limit: 1);
+      if (r.isNotEmpty) return {'success': true, 'id': r.first['id'], 'nombre': '${r.first['nombre']} ${r.first['apellidos']}', 'cargo': t};
     }
-    return {'success': false, 'message': 'Credenciales incorrectas'};
+    return {'success': false};
   }
 }
