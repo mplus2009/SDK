@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/usuario.dart';
 
@@ -21,18 +23,12 @@ class DatabaseService {
   static Future<Database> _initDatabase() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'emcc_sistema.db');
-    return await openDatabase(path, version: 2, onCreate: _onCreate);
-  }
-
-  static Future<void> _onCreate(Database db, int version) async {
-    final sql = await rootBundle.loadString('assets/data/usuario_use.sqlite');
-    final statements = sql.split(';');
-    for (final stmt in statements) {
-      final trimmed = stmt.trim();
-      if (trimmed.isNotEmpty && !trimmed.startsWith('--')) {
-        try { await db.execute(trimmed); } catch (e) {}
-      }
+    if (!File(path).existsSync()) {
+      final data = await rootBundle.load('assets/data/emcc_sistema.db');
+      final bytes = data.buffer.asUint8List();
+      await File(path).writeAsBytes(bytes);
     }
+    return await openDatabase(path, version: 2);
   }
 
   static Future<bool> initSession() async {
@@ -59,11 +55,10 @@ class DatabaseService {
 
   static Future<Map<String, dynamic>> login(String nombre, String apellidos, String password, String cargo) async {
     final db = await database;
-    String tabla = cargo;
-    final r = await db.query(tabla, where: 'nombre=? AND apellidos=? AND password=?', whereArgs: [nombre, apellidos, password], limit: 1);
+    final r = await db.query(cargo, where: 'nombre=? AND apellidos=? AND password=?', whereArgs: [nombre, apellidos, password], limit: 1);
     if (r.isNotEmpty) {
       final u = r.first;
-      final usuario = Usuario(id: int.tryParse(u['id'].toString()) ?? 0, nombre: u['nombre'].toString(), apellidos: u['apellidos'].toString(), ci: (u['CI'] ?? u['ci'] ?? '').toString(), cargo: cargo, ocupacion: u['ocupacion']?.toString(), grado: u['grado']?.toString(), peloton: int.tryParse(u['peloton']?.toString() ?? ''));
+      final usuario = Usuario(id: int.tryParse(u['id'].toString()) ?? 0, nombre: u['nombre'].toString(), apellidos: u['apellidos'].toString(), ci: (u['CI'] ?? '').toString(), cargo: cargo, ocupacion: u['ocupacion']?.toString(), grado: u['grado']?.toString(), peloton: int.tryParse(u['peloton']?.toString() ?? ''));
       await saveSession(usuario);
       return {'success': true};
     }
@@ -81,11 +76,10 @@ class DatabaseService {
   }
 
   static Future<Map<String, dynamic>> getDashboard() async {
-    final db = await database;
     if (_usuario == null) return {'success': false};
-    final idF = '${_usuario!.cargo}_${_usuario!.id}';
-    final act = await db.query('actividad', where: 'id_end=?', whereArgs: [idF], orderBy: 'fecha DESC', limit: 20);
-    return {'success': true, 'stats': {'meritos_semana': 0, 'demeritos_semana': 0, 'balance_semana': 0}, 'semana_actual': act};
+    final db = await database;
+    final act = await db.query('actividad', where: 'id_end=?', whereArgs: ['${_usuario!.cargo}_${_usuario!.id}'], orderBy: 'fecha DESC', limit: 20);
+    return {'success': true, 'stats': {'meritos_semana': 0, 'demeritos_semana': 0, 'balance_semana': 0}, 'semana_actual': act, 'semana_fecha': '', 'alarma_activa': false};
   }
 
   static Future<Map<String, dynamic>> enviarNotificacion(Map<String, dynamic> data) async {
@@ -98,6 +92,6 @@ class DatabaseService {
     return {'success': true};
   }
 
-  static Future<Map<String, dynamic>> getPerfil() async { return {'success': true}; }
+  static Future<Map<String, dynamic>> getPerfil() async { return {'success': true, 'stats': {'meritos': 0, 'demeritos': 0}, 'ultimas_actividades': []}; }
   static Future<Map<String, dynamic>> verificarNotificador(String nombre, String password) async { return {'success': false}; }
 }
