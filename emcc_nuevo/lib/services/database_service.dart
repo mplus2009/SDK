@@ -1,9 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/usuario.dart';
 
@@ -23,12 +21,20 @@ class DatabaseService {
   static Future<Database> _initDatabase() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'emcc_sistema.db');
-    if (!await File(path).exists()) {
-      final data = await rootBundle.load('assets/data/emcc_sistema.db');
-      final bytes = data.buffer.asUint8List();
-      await File(path).writeAsBytes(bytes);
+    return await openDatabase(path, version: 2, onCreate: _onCreate);
+  }
+
+  static Future<void> _onCreate(Database db, int version) async {
+    final String sql = await rootBundle.loadString('assets/data/usuario_use.sql');
+    final statements = sql.split(';');
+    for (final stmt in statements) {
+      final trimmed = stmt.trim();
+      if (trimmed.isNotEmpty && !trimmed.startsWith('--') && !trimmed.startsWith('/*')) {
+        try { await db.execute(trimmed); } catch (e) {
+          print('SQL Error: $e');
+        }
+      }
     }
-    return await openDatabase(path, version: 4);
   }
 
   static Future<bool> initSession() async {
@@ -54,33 +60,72 @@ class DatabaseService {
   }
 
   static Future<Map<String, dynamic>> login(String nombre, String apellidos, String password, String cargo) async {
-    final db = await database;
-    String tabla;
-    switch (cargo) {
-      case 'estudiante': tabla = 'estudiante'; break;
-      case 'profesor': tabla = 'profesor'; break;
-      case 'oficial': tabla = 'oficial'; break;
-      case 'directiva': tabla = 'directiva'; break;
-      default: return {'success': false};
+    try {
+      final db = await database;
+      String tabla;
+      switch (cargo) {
+        case 'estudiante': tabla = 'estudiante'; break;
+        case 'profesor': tabla = 'profesor'; break;
+        case 'oficial': tabla = 'oficial'; break;
+        case 'directiva': tabla = 'directiva'; break;
+        default: return {'success': false, 'message': 'Cargo no válido'};
+      }
+      
+      print('🔍 Buscando en tabla: $tabla');
+      print('🔍 Nombre: $nombre, Apellidos: $apellidos, Password: $password');
+      
+      // Primero verificar si la tabla tiene datos
+      final count = await db.rawQuery('SELECT COUNT(*) as c FROM $tabla');
+      print('🔍 Registros en $tabla: ${count.first['c']}');
+      
+      // Buscar usuario
+      final resultados = await db.query(
+        tabla,
+        where: 'nombre = ? AND apellidos = ? AND password = ?',
+        whereArgs: [nombre, apellidos, password],
+        limit: 1,
+      );
+      
+      print('🔍 Resultados encontrados: ${resultados.length}');
+      
+      if (resultados.isNotEmpty) {
+        final u = resultados.first;
+        print('✅ Usuario encontrado: ${u['nombre']} ${u['apellidos']}');
+        final usuario = Usuario(
+          id: u['id'] is int ? u['id'] as int : int.tryParse(u['id'].toString()) ?? 0,
+          nombre: u['nombre'].toString(),
+          apellidos: u['apellidos'].toString(),
+          ci: (u['CI'] ?? u['ci'] ?? '').toString(),
+          cargo: cargo,
+          ocupacion: u['ocupacion']?.toString(),
+          grado: u['grado']?.toString(),
+          peloton: u['peloton'] is int ? u['peloton'] as int : int.tryParse(u['peloton'].toString()),
+        );
+        await saveSession(usuario);
+        return {'success': true, 'usuario': usuario.toJson()};
+      }
+      
+      print('❌ Usuario no encontrado');
+      return {'success': false, 'message': 'Usuario no encontrado'};
+    } catch (e) {
+      print('💥 ERROR en login: $e');
+      return {'success': false, 'message': 'Error: $e'};
     }
-    final r = await db.query(tabla, where: 'nombre = ? AND apellidos = ? AND password = ?', whereArgs: [nombre, apellidos, password], limit: 1);
-    if (r.isNotEmpty) {
-      final u = r.first;
-      final usuario = Usuario(id: u['id'] as int, nombre: u['nombre'] as String, apellidos: u['apellidos'] as String, ci: (u['CI'] ?? '') as String, cargo: cargo, ocupacion: u['ocupacion'] as String?, grado: u['grado'] as String?, peloton: u['peloton'] as int?);
-      await saveSession(usuario);
-      return {'success': true, 'usuario': usuario.toJson()};
-    }
-    return {'success': false};
   }
 
   static Future<List<Map<String, dynamic>>> buscarEstudiantes(String query) async {
     final db = await database;
-    return await db.rawQuery("SELECT e.*, COALESCE((SELECT SUM(cantidad) FROM actividad WHERE id_end = 'estudiante_' || e.id AND tipo = 'merito'), 0) as meritos, COALESCE((SELECT SUM(cantidad) FROM actividad WHERE id_end = 'estudiante_' || e.id AND tipo = 'demerito'), 0) as demeritos FROM estudiante e WHERE e.nombre LIKE ? OR e.apellidos LIKE ? OR e.CI LIKE ? LIMIT 30", ['%$query%', '%$query%', '%$query%']);
+    final searchTerm = '%$query%';
+    return await db.rawQuery(
+      "SELECT e.*, COALESCE((SELECT SUM(cantidad) FROM actividad WHERE id_end = 'estudiante_' || e.id AND tipo = 'merito'), 0) as meritos, COALESCE((SELECT SUM(cantidad) FROM actividad WHERE id_end = 'estudiante_' || e.id AND tipo = 'demerito'), 0) as demeritos FROM estudiante e WHERE e.nombre LIKE ? OR e.apellidos LIKE ? OR e.CI LIKE ? LIMIT 30",
+      [searchTerm, searchTerm, searchTerm],
+    );
   }
 
   static Future<List<Map<String, dynamic>>> getCatalogo(String tipo) async {
     final db = await database;
-    return await db.query(tipo == 'merito' ? 'meritos' : 'demeritos', orderBy: 'id');
+    final tabla = tipo == 'merito' ? 'meritos' : 'demeritos';
+    return await db.query(tabla, orderBy: 'id');
   }
 
   static Future<Map<String, dynamic>> getDashboard() async {
@@ -93,7 +138,9 @@ class DatabaseService {
     final m = await db.rawQuery('SELECT COALESCE(SUM(cantidad),0) as t FROM actividad WHERE id_end=? AND tipo=? AND fecha>=?', [idF, 'merito', inicio]);
     final d = await db.rawQuery('SELECT COALESCE(SUM(cantidad),0) as t FROM actividad WHERE id_end=? AND tipo=? AND fecha>=?', [idF, 'demerito', inicio]);
     final act = await db.query('actividad', where: 'id_end=? AND fecha>=?', whereArgs: [idF, inicio], orderBy: 'fecha DESC, hora DESC');
-    return {'success': true, 'stats': {'meritos_semana': (m.first['t'] as int?) ?? 0, 'demeritos_semana': (d.first['t'] as int?) ?? 0, 'balance_semana': ((m.first['t'] as int?) ?? 0) - ((d.first['t'] as int?) ?? 0)}, 'semana_actual': act, 'semana_fecha': inicio, 'alarma_activa': false};
+    final mVal = (m.first['t'] as int?) ?? 0;
+    final dVal = (d.first['t'] as int?) ?? 0;
+    return {'success': true, 'stats': {'meritos_semana': mVal, 'demeritos_semana': dVal, 'balance_semana': mVal - dVal}, 'semana_actual': act, 'semana_fecha': inicio, 'alarma_activa': false};
   }
 
   static Future<Map<String, dynamic>> enviarNotificacion(Map<String, dynamic> data) async {
