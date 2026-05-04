@@ -1,9 +1,7 @@
 name: sistema_escolar
-description: Sistema de Gestion Escolar EMCC - Modo P2P sin servidor
-
+description: Sistema de Gestion Escolar EMCC
 publish_to: 'none'
-
-version: 2.0.0+1
+version: 4.0.0+1
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -11,7 +9,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
   cupertino_icons: ^1.0.6
   sqflite: ^2.3.0
   path: ^1.8.3
@@ -32,7 +29,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon/
-    - assets/db/emcc_sistema.db
+    - assets/data/usuario_use.sql
 
 flutter_launcher_icons:
   android: true
