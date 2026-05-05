@@ -100,8 +100,6 @@ class DatabaseService {
     for (final dest in d['destinatarios']) {
       for (final act in d['actividades']) {
         await db.insert('actividad', {'id_star': '${d['cargo_notificador']}_${d['id_star']}', 'id_end': 'estudiante_${dest['id']}', 'tipo': act['tipo'], 'categoria': act['categoria'], 'falta_causa': act['nombre'], 'cantidad': act['cantidad'], 'fecha': d['fecha'], 'hora': d['hora'], 'leido': 0});
-    try { await MeshService.broadcast({'id': DateTime.now().millisecondsSinceEpoch, 'id_star': '${d['cargo_notificador']}_${d['id_star']}', 'id_end': 'estudiante_${dest['id']}', 'tipo': act['tipo'], 'categoria': act['categoria'], 'falta_causa': act['nombre'], 'cantidad': act['cantidad'], 'fecha': d['fecha'], 'hora': d['hora'], 'leido': 0}); } catch (e) {}
-    try { await MeshService.broadcast({'id': DateTime.now().millisecondsSinceEpoch, 'id_star': '${d['cargo_notificador']}_${d['id_star']}', 'id_end': 'estudiante_${dest['id']}', 'tipo': act['tipo'], 'categoria': act['categoria'], 'falta_causa': act['nombre'], 'cantidad': act['cantidad'], 'fecha': d['fecha'], 'hora': d['hora'], 'leido': 0}); } catch (e) {}
       }
     }
     return {'success': true};
