@@ -1,3 +1,4 @@
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -34,13 +35,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _searching = false;
   final _mesh = MeshService();
   MeshStatus _meshStatus = MeshStatus.disconnected;
-  List<String> _foundDevices = [];
+  List<BluetoothDevice> _foundDevices = [];
 
   @override
   void initState() {
     super.initState();
     _load();
-    _mesh.searchDevices();
+    _mesh.scan();
     _mesh.statusStream.listen((s) => setState(() { _meshStatus = s; if (s == MeshStatus.connected) _foundDevices = _mesh.devices; }));
   }
 
@@ -52,7 +53,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final r = await DatabaseService.getDashboard();
     if (!mounted) return;
     setState(() { _data = r; _loading = false; });
-    _mesh.searchDevices();
+    _mesh.scan();
   }
 
   Future<void> _search(String q) async {
@@ -124,10 +125,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     IconData icon; Color color; String label;
     switch (_meshStatus) {
       case MeshStatus.disconnected: icon = Icons.signal_wifi_off; color = Colors.grey; label = 'Sin red'; break;
-      case MeshStatus.searching: icon = Icons.wifi_find; color = Colors.orange; label = 'Buscando...'; break;
-      case MeshStatus.connected: icon = Icons.signal_wifi_4_bar; color = Colors.green; label = '${_foundDevices.length} disp.'; break;
-      case MeshStatus.serverOn: icon = Icons.wifi_tethering; color = Colors.teal; label = "Servidor ON"; break;
-      case MeshStatus.sending: icon = Icons.signal_wifi_statusbar_4_bar; color = Colors.blue; label = 'Enviando...'; break;
+      case MeshStatus.scanning: icon = Icons.bluetooth_searching; color = Colors.orange; label = "Buscando..."; break;
+      case MeshStatus.connected: icon = Icons.bluetooth_connected; color = Colors.green; label = "${_foundDevices.length} disp."; break;
+      case MeshStatus.sending: icon = Icons.bluetooth; color = Colors.blue; label = "Enviando..."; break;
+      case MeshStatus.disconnected: icon = Icons.bluetooth_disabled; color = Colors.grey; label = "Sin conexión"; break;
     }
     return Padding(
       padding: const EdgeInsets.only(right: 8),
@@ -147,7 +148,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Text('Estado: ${_meshStatus.name}'),
           const SizedBox(height: 10),
           const Text('Dispositivos encontrados:'),
-          ..._foundDevices.map((d) => ListTile(leading: const Icon(Icons.phone_android), title: Text(d), dense: true)),
+          ..._foundDevices.map((d) => ListTile(leading: const Icon(Icons.phone_android), title: Text(d.name ?? d.address ?? "Dispositivo"), dense: true)),
           if (_foundDevices.isEmpty) const Text('Ninguno'),
         ]),
         actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cerrar'))],

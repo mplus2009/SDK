@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'services/database_service.dart';
 import 'services/mesh_service.dart';
 import 'screens/dashboard_screen.dart';
@@ -7,7 +6,6 @@ import 'screens/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(const EMCCApp());
 }
 
@@ -34,33 +32,22 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _iniciar();
+    _go();
   }
 
-  Future<void> _iniciar() async {
-    // Iniciar el servidor mesh PRIMERO
-    try {
-      await MeshService().startServer();
-    } catch (_) {}
-    
-    // Cargar base de datos
+  Future<void> _go() async {
+    MeshService().start();
     try {
       await DatabaseService.database;
       await DatabaseService.initSession();
     } catch (_) {}
-    
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 3));
     if (!mounted) return;
-    
     Navigator.pushReplacement(context, MaterialPageRoute(
       builder: (_) => DatabaseService.isLoggedIn ? const DashboardScreen() : const LoginScreen(),
     ));
   }
 
   @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
-  }
+  Widget build(BuildContext context) => const Scaffold(body: Center(child: CircularProgressIndicator()));
 }
