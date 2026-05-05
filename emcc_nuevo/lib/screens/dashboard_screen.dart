@@ -33,7 +33,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _searching = false;
   final _mesh = MeshService();
   MeshStatus _meshStatus = MeshStatus.disconnected;
-  List<String> _foundDevices = [];
+  List<Map<String, String>> _foundDevices = [];
 
   @override
   void initState() {
@@ -136,7 +136,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Text('Estado: ${_meshStatus.name}'),
           const SizedBox(height: 10),
           const Text('Dispositivos encontrados:'),
-          ..._foundDevices.map((d) => ListTile(leading: const Icon(Icons.phone_android), title: Text(d), dense: true)),
+          ..._foundDevices.map((d) => ListTile(leading: const Icon(Icons.phone_android), title: Text(d["name"] ?? d["ip"] ?? ""), dense: true)),
           if (_foundDevices.isEmpty) const Text('Ninguno'),
         ]),
         actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cerrar'))],
