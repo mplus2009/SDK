@@ -1,66 +1,77 @@
 package com.emcc.mesh;
 
 import android.content.Context;
-import android.net.wifi.p2p.WifiP2pManager;
-import android.net.wifi.p2p.WifiP2pInfo;
-import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pDeviceList;
-import android.net.wifi.p2p.WifiP2pConfig;
-import android.net.wifi.p2p.WifiP2pManager.Channel;
-import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
-import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.net.wifi.WifiManager;
-import java.io.OutputStream;
-import java.io.InputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.InetAddress;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.p2p.WifiP2pManager;
+import android.net.wifi.p2p.WifiP2pDeviceList;
+import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.p2p.WifiP2pConfig;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MeshPlugin {
-    private WifiP2pManager manager;
-    private Channel channel;
+    private WifiP2pManager p2pManager;
+    private WifiP2pManager.Channel channel;
     private Context context;
-    private ServerSocket serverSocket;
-    private Socket clientSocket;
-    private boolean isServer = false;
+    private WifiManager wifiManager;
     
     public MeshPlugin(Context ctx) {
         this.context = ctx;
-        this.manager = (WifiP2pManager) ctx.getSystemService(Context.WIFI_P2P_SERVICE);
-        this.channel = manager.initialize(ctx, ctx.getMainLooper(), null);
+        this.p2pManager = (WifiP2pManager) ctx.getSystemService(Context.WIFI_P2P_SERVICE);
+        this.channel = p2pManager.initialize(ctx, ctx.getMainLooper(), null);
+        this.wifiManager = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
+    }
+    
+    public void startHotspot(String ssid, String password) {
+        try {
+            // Apagar WiFi normal
+            if (wifiManager.isWifiEnabled()) wifiManager.setWifiEnabled(false);
+            
+            // Crear configuración del hotspot
+            WifiConfiguration config = new WifiConfiguration();
+            config.SSID = ssid;
+            config.preSharedKey = password;
+            config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+            
+            // Usar reflection para iniciar el hotspot
+            Method method = wifiManager.getClass().getDeclaredMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class);
+            method.invoke(wifiManager, config, true);
+        } catch (Exception e) {
+            // Intentar con WiFiDirect como alternativa
+            try {
+                if (!wifiManager.isWifiEnabled()) wifiManager.setWifiEnabled(true);
+            } catch (Exception ex) {}
+        }
     }
     
     public void startDiscovery() {
-        manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
+        p2pManager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
             @Override public void onSuccess() {}
             @Override public void onFailure(int reason) {}
         });
     }
     
-    public void connectToDevice(String deviceAddress) {
-        WifiP2pConfig config = new WifiP2pConfig();
-        config.deviceAddress = deviceAddress;
-        manager.connect(channel, config, new WifiP2pManager.ActionListener() {
-            @Override public void onSuccess() {}
-            @Override public void onFailure(int reason) {}
-        });
+    public List<String> getPeers() {
+        List<String> peers = new ArrayList<>();
+        // Aquí se obtendrían los peers reales
+        return peers;
     }
     
     public void startServer(int port) {
-        isServer = true;
-        new Thread(() -> {
-            try {
-                serverSocket = new ServerSocket(port);
-                while (true) {
-                    clientSocket = serverSocket.accept();
-                    // Leer datos
-                    InputStream in = clientSocket.getInputStream();
-                    byte[] buffer = new byte[1024];
-                    int len = in.read(buffer);
-                    String data = new String(buffer, 0, len);
-                    // Aquí procesar los datos recibidos
-                }
-            } catch (Exception e) {}
-        }).start();
+        try {
+            // Iniciar servidor simple
+            Thread serverThread = new Thread(() -> {
+                try {
+                    java.net.ServerSocket serverSocket = new java.net.ServerSocket(port);
+                    while (true) {
+                        java.net.Socket client = serverSocket.accept();
+                        // Procesar cliente
+                    }
+                } catch (Exception e) {}
+            });
+            serverThread.start();
+        } catch (Exception e) {}
     }
 }

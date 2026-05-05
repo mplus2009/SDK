@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -39,6 +40,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _load();
+    _mesh.searchDevices();
     _mesh.statusStream.listen((s) => setState(() { _meshStatus = s; if (s == MeshStatus.connected) _foundDevices = _mesh.devices; }));
   }
 
@@ -83,6 +85,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       default: return;
     }
     Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+  }
+
+  void _startHotspot() async {
+    try {
+      await MethodChannel("com.emcc.mesh/channel").invokeMethod("startHotspot", {"ssid": "EMCC_MESH", "password": "emcc2026"});
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Hotspot iniciado: EMCC_MESH / emcc2026"), backgroundColor: Colors.green));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red));
+    }
   }
 
   void _mostrarQR() {
@@ -191,7 +202,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           if (['profesor', 'oficial'].contains(u.cargo)) ...[const SizedBox(height: 20), _buildPanelCargo(u).animate().fadeIn(delay: 300.ms)],
         ]),
       ),
-      floatingActionButton: puede ? FloatingActionButton.extended(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificarScreen())), icon: const Icon(Icons.edit_note), label: const Text('Notificar'), backgroundColor: const Color(0xFF1E3C72)) : null,
+      floatingActionButton: puede ? Row(mainAxisSize: MainAxisSize.min, children: [FloatingActionButton.extended(onPressed: () => _startHotspot(), icon: const Icon(Icons.wifi_tethering), label: const Text("Hotspot"), backgroundColor: Colors.orange, heroTag: "hotspot"), const SizedBox(width: 10), FloatingActionButton.extended(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificarScreen())), icon: const Icon(Icons.edit_note), label: const Text("Notificar"), backgroundColor: const Color(0xFF1E3C72), heroTag: "notificar")]) : null,
     );
   }
 

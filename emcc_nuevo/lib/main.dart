@@ -8,8 +8,6 @@ import 'screens/login_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  // Iniciar servidor mesh en segundo plano
-  MeshService().startServer();
   runApp(const EMCCApp());
 }
 
@@ -36,15 +34,24 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 2), _go);
+    _iniciar();
   }
 
-  Future<void> _go() async {
+  Future<void> _iniciar() async {
+    // Iniciar el servidor mesh PRIMERO
+    try {
+      await MeshService().startServer();
+    } catch (_) {}
+    
+    // Cargar base de datos
     try {
       await DatabaseService.database;
       await DatabaseService.initSession();
     } catch (_) {}
+    
+    await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
+    
     Navigator.pushReplacement(context, MaterialPageRoute(
       builder: (_) => DatabaseService.isLoggedIn ? const DashboardScreen() : const LoginScreen(),
     ));
