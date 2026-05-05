@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:sqflite/sqflite.dart';
+import 'database_service.dart';
 
 enum MeshStatus { disconnected, searching, connected, sending }
 
@@ -9,29 +12,46 @@ class MeshService {
 
   MeshStatus _status = MeshStatus.disconnected;
   String _deviceName = '';
-  final StreamController<MeshStatus> _statusController = StreamController<MeshStatus>.broadcast();
+  List<String> _foundDevices = [];
+  final _statusCtrl = StreamController<MeshStatus>.broadcast();
 
   MeshStatus get status => _status;
   String get deviceName => _deviceName;
-  Stream<MeshStatus> get statusStream => _statusController.stream;
+  List<String> get foundDevices => _foundDevices;
+  Stream<MeshStatus> get statusStream => _statusCtrl.stream;
 
-  void startSearch() {
+  Future<void> startSearch() async {
     _status = MeshStatus.searching;
-    _statusController.add(_status);
-    // Simula encontrar dispositivo
-    Future.delayed(const Duration(seconds: 3), () {
-      _deviceName = 'Prof. Martínez';
-      _status = MeshStatus.connected;
-      _statusController.add(_status);
-    });
+    _statusCtrl.add(_status);
+    _foundDevices = [];
+    
+    // Buscar en la BD local usuarios como "dispositivos cercanos"
+    try {
+      final db = await DatabaseService.database;
+      final estudiantes = await db.query('estudiante', limit: 5);
+      final profesores = await db.query('profesor', limit: 3);
+      final directiva = await db.query('directiva', limit: 2);
+      
+      for (final e in estudiantes) { _foundDevices.add('${e['nombre']} ${e['apellidos']} (Est.)'); }
+      for (final p in profesores) { _foundDevices.add('${p['nombre']} ${p['apellidos']} (Prof.)'); }
+      for (final d in directiva) { _foundDevices.add('${d['nombre']} ${d['apellidos']} (Dir.)'); }
+      
+      if (_foundDevices.isNotEmpty) {
+        _deviceName = _foundDevices.first;
+        _status = MeshStatus.connected;
+      }
+    } catch (_) {}
+    
+    _statusCtrl.add(_status);
   }
 
-  void sendData(String info) {
+  Future<void> sendData(Map<String, dynamic> data) async {
     _status = MeshStatus.sending;
-    _statusController.add(_status);
-    Future.delayed(const Duration(seconds: 1), () {
-      _status = MeshStatus.connected;
-      _statusController.add(_status);
-    });
+    _statusCtrl.add(_status);
+    await Future.delayed(const Duration(seconds: 1));
+    _status = MeshStatus.connected;
+    _statusCtrl.add(_status);
   }
+
+  void dispose() { _statusCtrl.close(); }
 }

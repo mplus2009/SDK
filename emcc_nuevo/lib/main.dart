@@ -74,21 +74,15 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       body: Container(
         decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF1E3C72), Color(0xFF2A5298)])),
         child: Center(
-          child: FadeTransition(
-            opacity: _fade,
-            child: ScaleTransition(
-              scale: _scale,
-              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Container(width: 100, height: 100, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(25)), child: const Icon(Icons.school, size: 60, color: Colors.white)),
-                const SizedBox(height: 30),
-                const Text('EMCC DIGITAL', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
-                const SizedBox(height: 40),
-                const CircularProgressIndicator(color: Colors.white),
-                const SizedBox(height: 20),
-                const Text('Cargando...', style: TextStyle(color: Colors.white70)),
-              ]),
-            ),
-          ),
+          child: FadeTransition(opacity: _fade, child: ScaleTransition(scale: _scale, child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Container(width: 100, height: 100, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(25)), child: const Icon(Icons.school, size: 60, color: Colors.white)),
+            const SizedBox(height: 30),
+            const Text('EMCC DIGITAL', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
+            const SizedBox(height: 40),
+            const CircularProgressIndicator(color: Colors.white),
+            const SizedBox(height: 20),
+            const Text('Cargando...', style: TextStyle(color: Colors.white70)),
+          ]))),
         ),
       ),
     );

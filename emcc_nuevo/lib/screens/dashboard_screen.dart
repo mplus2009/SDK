@@ -33,12 +33,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _searching = false;
   final _mesh = MeshService();
   MeshStatus _meshStatus = MeshStatus.disconnected;
+  List<String> _foundDevices = [];
 
   @override
   void initState() {
     super.initState();
     _load();
-    _mesh.statusStream.listen((s) => setState(() => _meshStatus = s));
+    _mesh.statusStream.listen((s) => setState(() { _meshStatus = s; if (s == MeshStatus.connected) _foundDevices = _mesh.foundDevices; }));
   }
 
   @override
@@ -49,7 +50,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final r = await DatabaseService.getDashboard();
     if (!mounted) return;
     setState(() { _data = r; _loading = false; });
-    _mesh.startSearch(); // Inicia búsqueda de red
+    _mesh.startSearch();
   }
 
   Future<void> _search(String q) async {
@@ -103,11 +104,61 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 20),
           Text(u.nombreCompleto, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
           Text('CI: ${u.ci}  |  ${u.cargo}', style: GoogleFonts.poppins(color: Colors.grey)),
-          const SizedBox(height: 20),
         ]),
       ),
     );
   }
+
+  Widget _buildMeshIndicator() {
+    IconData icon; Color color; String label;
+    switch (_meshStatus) {
+      case MeshStatus.disconnected: icon = Icons.signal_wifi_off; color = Colors.grey; label = 'Sin red'; break;
+      case MeshStatus.searching: icon = Icons.wifi_find; color = Colors.orange; label = 'Buscando...'; break;
+      case MeshStatus.connected: icon = Icons.signal_wifi_4_bar; color = Colors.green; label = '${_foundDevices.length} disp.'; break;
+      case MeshStatus.sending: icon = Icons.signal_wifi_statusbar_4_bar; color = Colors.blue; label = 'Enviando...'; break;
+    }
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: GestureDetector(
+        onTap: () => _showMeshInfo(),
+        child: Chip(avatar: Icon(icon, size: 18, color: color), label: Text(label, style: const TextStyle(fontSize: 11)), backgroundColor: color.withOpacity(0.1)),
+      ),
+    );
+  }
+
+  void _showMeshInfo() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('🌐 Red Mesh'),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text('Estado: ${_meshStatus.name}'),
+          const SizedBox(height: 10),
+          const Text('Dispositivos encontrados:'),
+          ..._foundDevices.map((d) => ListTile(leading: const Icon(Icons.phone_android), title: Text(d), dense: true)),
+          if (_foundDevices.isEmpty) const Text('Ninguno'),
+        ]),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cerrar'))],
+      ),
+    );
+  }
+
+  List<PopupMenuEntry<String>> _menuItems(Usuario u, int n) => [
+    PopupMenuItem(value: 'perfil', child: Row(children: [Icon(Icons.person_2, color: Colors.blue.shade700), const SizedBox(width: 10), const Text('Mi Perfil')])),
+    if (n > 0) PopupMenuItem(value: 'notif', child: Row(children: [Icon(Icons.notifications_active, color: Colors.red), const SizedBox(width: 10), Text('Notificaciones ($n)')])),
+    PopupMenuItem(value: 'tabla', child: Row(children: [Icon(Icons.table_chart, color: Colors.purple.shade700), const SizedBox(width: 10), const Text('Tabla Méritos/Deméritos')])),
+    if (u.cargo == 'profesor') PopupMenuItem(value: 'prof_h', child: Row(children: [Icon(Icons.book, color: Colors.teal), const SizedBox(width: 10), const Text('Mi Horario')])),
+    PopupMenuItem(value: 'horario', child: Row(children: [Icon(Icons.calendar_month, color: Colors.orange), const SizedBox(width: 10), const Text('Horario')])),
+    if (u.cargo == 'directiva') ...[
+      PopupMenuItem(value: 'edit_h', child: Row(children: [Icon(Icons.edit_calendar, color: Colors.indigo), const SizedBox(width: 10), const Text('Editar Horario')])),
+      PopupMenuItem(value: 'edit_r', child: Row(children: [Icon(Icons.gavel, color: Colors.red.shade700), const SizedBox(width: 10), const Text('Editar Reglas')])),
+      PopupMenuItem(value: 'cargos', child: Row(children: [Icon(Icons.swap_horiz, color: Colors.brown), const SizedBox(width: 10), const Text('Cambiar Cargos')])),
+    ],
+    if (u.cargo == 'oficial') PopupMenuItem(value: 'mando', child: Row(children: [Icon(Icons.military_tech, color: Colors.amber.shade800), const SizedBox(width: 10), const Text('Cambio de Mando')])),
+    if (u.cargo == 'directiva' || u.ocupacion == 'secretaria') PopupMenuItem(value: 'secre', child: Row(children: [Icon(Icons.admin_panel_settings, color: Colors.pink), const SizedBox(width: 10), const Text('Panel Secretaria')])),
+    PopupMenuItem(value: 'config', child: Row(children: [Icon(Icons.settings, color: Colors.grey.shade700), const SizedBox(width: 10), const Text('Configuración')])),
+    PopupMenuItem(value: 'logout', child: Row(children: [Icon(Icons.logout, color: Colors.red), const SizedBox(width: 10), const Text('Cerrar Sesión')])),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -124,94 +175,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: Text('Hola, ${u.nombre}', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-        actions: [
-          _buildMeshIndicator(),
-          IconButton(icon: const Icon(Icons.qr_code_2), onPressed: _mostrarQR),
-          PopupMenuButton<String>(onSelected: (v) => v == 'logout' ? _logout() : _go(v), itemBuilder: (_) => _menuItems(u, nuevas)),
-        ],
+        actions: [_buildMeshIndicator(), IconButton(icon: const Icon(Icons.qr_code_2), onPressed: _mostrarQR), PopupMenuButton<String>(onSelected: (v) => v == 'logout' ? _logout() : _go(v), itemBuilder: (_) => _menuItems(u, nuevas))],
       ),
       body: RefreshIndicator(
         onRefresh: _load,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            if (esEst) _buildStats(stats).animate().fadeIn(duration: 400.ms).slideX(begin: -0.1),
-            const SizedBox(height: 20),
-            _buildWelcome(u).animate().fadeIn(delay: 200.ms),
-            const SizedBox(height: 20),
-            if (alarma) _buildAlarmaBanner().animate().shake(),
-            if (puede) ...[
-              const SizedBox(height: 20),
-              _buildBuscador().animate().fadeIn(delay: 300.ms),
-            ],
-            if (esEst && semana.isNotEmpty) ...[
-              const SizedBox(height: 20),
-              _buildSemana(semana).animate().fadeIn(delay: 400.ms),
-            ],
-            if (['profesor', 'oficial'].contains(u.cargo)) ...[
-              const SizedBox(height: 20),
-              _buildPanelCargo(u).animate().fadeIn(delay: 300.ms),
-            ],
-          ],
-        ),
+        child: ListView(padding: const EdgeInsets.all(16), children: [
+          if (esEst) _buildStats(stats).animate().fadeIn(duration: 400.ms),
+          const SizedBox(height: 20),
+          _buildWelcome(u).animate().fadeIn(delay: 200.ms),
+          const SizedBox(height: 20),
+          if (alarma) _buildAlarmaBanner().animate().shake(),
+          if (puede) ...[const SizedBox(height: 20), _buildBuscador().animate().fadeIn(delay: 300.ms)],
+          if (esEst && semana.isNotEmpty) ...[const SizedBox(height: 20), _buildSemana(semana).animate().fadeIn(delay: 400.ms)],
+          if (['profesor', 'oficial'].contains(u.cargo)) ...[const SizedBox(height: 20), _buildPanelCargo(u).animate().fadeIn(delay: 300.ms)],
+        ]),
       ),
-      floatingActionButton: puede
-          ? FloatingActionButton.extended(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificarScreen())),
-              icon: const Icon(Icons.edit_note),
-              label: const Text('Notificar'),
-              backgroundColor: const Color(0xFF1E3C72),
-            )
-          : null,
+      floatingActionButton: puede ? FloatingActionButton.extended(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificarScreen())), icon: const Icon(Icons.edit_note), label: const Text('Notificar'), backgroundColor: const Color(0xFF1E3C72)) : null,
     );
-  }
-
-  Widget _buildMeshIndicator() {
-    IconData icon;
-    Color color;
-    String label;
-    switch (_meshStatus) {
-      case MeshStatus.disconnected:
-        icon = Icons.wifi_off; color = Colors.grey; label = 'Sin red';
-        break;
-      case MeshStatus.searching:
-        icon = Icons.wifi_find; color = Colors.orange; label = 'Buscando...';
-        break;
-      case MeshStatus.connected:
-        icon = Icons.wifi; color = Colors.green; label = _mesh.deviceName;
-        break;
-      case MeshStatus.sending:
-        icon = Icons.wifi_protected_setup; color = Colors.blue; label = 'Enviando...';
-        break;
-    }
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: Chip(
-        avatar: Icon(icon, size: 18, color: color),
-        label: Text(label, style: const TextStyle(fontSize: 11)),
-        backgroundColor: color.withOpacity(0.1),
-      ),
-    );
-  }
-
-  List<PopupMenuEntry<String>> _menuItems(Usuario u, int n) {
-    final items = <PopupMenuEntry<String>>[
-      const PopupMenuItem(value: 'perfil', child: Text('👤 Mi Perfil')),
-      if (n > 0) PopupMenuItem(value: 'notif', child: Text('🔔 Notificaciones ($n)')),
-      const PopupMenuItem(value: 'tabla', child: Text('📋 Tabla Méritos/Deméritos')),
-    ];
-    if (u.cargo == 'profesor') items.add(const PopupMenuItem(value: 'prof_h', child: Text('📚 Mi Horario')));
-    items.add(const PopupMenuItem(value: 'horario', child: Text('📅 Horario')));
-    if (u.cargo == 'directiva') {
-      items.add(const PopupMenuItem(value: 'edit_h', child: Text('✏️ Editar Horario')));
-      items.add(const PopupMenuItem(value: 'edit_r', child: Text('⚙️ Editar Reglas')));
-      items.add(const PopupMenuItem(value: 'cargos', child: Text('🔄 Cambiar Cargos')));
-    }
-    if (u.cargo == 'oficial') items.add(const PopupMenuItem(value: 'mando', child: Text('🎖️ Cambio de Mando')));
-    if (u.cargo == 'directiva' || u.ocupacion == 'secretaria') items.add(const PopupMenuItem(value: 'secre', child: Text('📝 Panel Secretaria')));
-    items.add(const PopupMenuItem(value: 'config', child: Text('⚙️ Configuración')));
-    items.add(const PopupMenuItem(value: 'logout', child: Text('🚪 Cerrar Sesión')));
-    return items;
   }
 
   Widget _buildStats(Map<String, dynamic> s) => Row(children: [
@@ -222,111 +202,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _stat('Bal. Sem', '${s['balance_semana']??0}', const Color(0xFF3B82F6), Icons.account_balance),
   ]);
 
-  Widget _stat(String label, String value, Color color, IconData icon) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: color.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))]),
-        child: Column(children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 8),
-          Text(value, style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w700, color: color)),
-          Text(label, style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey)),
-        ]),
-      ),
-    );
-  }
+  Widget _stat(String l, String v, Color c, IconData i) => Expanded(child: Container(padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: c.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))]), child: Column(children: [Icon(i, color: c, size: 28), const SizedBox(height: 8), Text(v, style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w700, color: c)), Text(l, style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey))])));
 
-  Widget _buildWelcome(Usuario u) => Container(
-    padding: const EdgeInsets.all(24),
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(colors: [Color(0xFF1E3C72), Color(0xFF2A5298)]),
-      borderRadius: BorderRadius.circular(24),
-      boxShadow: [BoxShadow(color: const Color(0xFF1E3C72).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))],
-    ),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('Bienvenido de vuelta', style: GoogleFonts.poppins(color: Colors.white70, fontSize: 14)),
-      const SizedBox(height: 4),
-      Text(u.nombreCompleto, style: GoogleFonts.poppins(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700)),
-      const SizedBox(height: 10),
-      Row(children: [
-        Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20)), child: Text(u.cargo.toUpperCase(), style: GoogleFonts.poppins(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600))),
-        const Spacer(),
-        Text('Actualizado: ${DateTime.now().toString().substring(0,16)}', style: GoogleFonts.poppins(color: Colors.white54, fontSize: 10)),
-      ]),
-    ]),
-  );
+  Widget _buildWelcome(Usuario u) => Container(padding: const EdgeInsets.all(24), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF1E3C72), Color(0xFF2A5298)]), borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: const Color(0xFF1E3C72).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))]), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Bienvenido de vuelta', style: GoogleFonts.poppins(color: Colors.white70, fontSize: 14)), const SizedBox(height: 4), Text(u.nombreCompleto, style: GoogleFonts.poppins(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700)), const SizedBox(height: 10), Row(children: [Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20)), child: Text(u.cargo.toUpperCase(), style: GoogleFonts.poppins(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600))), const Spacer(), Text('Actualizado: ${DateTime.now().toString().substring(0,16)}', style: GoogleFonts.poppins(color: Colors.white54, fontSize: 10))])]));
 
-  Widget _buildAlarmaBanner() => Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(color: const Color(0xFFEF4444).withOpacity(0.1), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.3))),
-    child: Row(children: [
-      const Icon(Icons.warning_amber, color: Color(0xFFEF4444)),
-      const SizedBox(width: 12),
-      Expanded(child: Text('Has alcanzado el límite de deméritos. Contacta a tu profesor guía.', style: GoogleFonts.poppins(color: const Color(0xFFEF4444), fontSize: 13, fontWeight: FontWeight.w500))),
-    ]),
-  );
+  Widget _buildAlarmaBanner() => Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: const Color(0xFFEF4444).withOpacity(0.1), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.3))), child: const Row(children: [Icon(Icons.warning_amber, color: Color(0xFFEF4444)), SizedBox(width: 12), Expanded(child: Text('Has alcanzado el límite de deméritos', style: TextStyle(color: Color(0xFFEF4444), fontSize: 13, fontWeight: FontWeight.w500)))]));
 
-  Widget _buildBuscador() => Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10)]),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('Buscar Estudiante', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700)),
-      const SizedBox(height: 12),
-      TextField(
-        controller: _bc,
-        decoration: InputDecoration(
-          hintText: 'Nombre, apellidos o CI...',
-          prefixIcon: const Icon(Icons.search),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-          filled: true,
-          fillColor: const Color(0xFFF5F7FA),
-        ),
-        onChanged: _search,
-      ),
-      if (_searching) const Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator())),
-      ..._results.map((e) => Container(
-        margin: const EdgeInsets.only(top: 10),
-        decoration: BoxDecoration(color: const Color(0xFFF5F7FA), borderRadius: BorderRadius.circular(16)),
-        child: ListTile(
-          leading: CircleAvatar(backgroundColor: const Color(0xFF1E3C72), child: Text('${e['nombre']?[0] ?? ''}', style: const TextStyle(color: Colors.white))),
-          title: Text('${e['nombre']} ${e['apellidos']}', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-          subtitle: Text('CI: ${e['CI']}'),
-          trailing: ElevatedButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => NotificarScreen(destinatarioPrecargado: e))), child: const Text('Reportar')),
-        ),
-      )),
-    ]),
-  );
+  Widget _buildBuscador() => Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10)]), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Buscar Estudiante', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700)), const SizedBox(height: 12), TextField(controller: _bc, decoration: InputDecoration(hintText: 'Nombre, apellidos o CI...', prefixIcon: const Icon(Icons.search), border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none), filled: true, fillColor: const Color(0xFFF5F7FA)), onChanged: _search), if (_searching) const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator())), ..._results.map((e) => Container(margin: const EdgeInsets.only(top: 10), decoration: BoxDecoration(color: const Color(0xFFF5F7FA), borderRadius: BorderRadius.circular(16)), child: ListTile(leading: CircleAvatar(backgroundColor: const Color(0xFF1E3C72), child: Text('${e['nombre']?[0] ?? ''}', style: const TextStyle(color: Colors.white))), title: Text('${e['nombre']} ${e['apellidos']}', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)), subtitle: Text('CI: ${e['CI']}'), trailing: ElevatedButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => NotificarScreen(destinatarioPrecargado: e))), child: const Text('Reportar')))))]));
 
-  Widget _buildSemana(List<dynamic> s) => Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10)]),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('Esta Semana', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700)),
-      const SizedBox(height: 12),
-      ...s.map((a) => Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: a['tipo'] == 'merito' ? const Color(0xFFD1FAE5) : const Color(0xFFFEE2E2), borderRadius: BorderRadius.circular(16)),
-        child: Row(children: [
-          Icon(a['tipo'] == 'merito' ? Icons.star : Icons.warning, color: a['tipo'] == 'merito' ? const Color(0xFF065F46) : const Color(0xFF991B1B)),
-          const SizedBox(width: 12),
-          Expanded(child: Text(a['falta_causa'] ?? '', style: GoogleFonts.poppins(fontWeight: FontWeight.w500))),
-          Text('${a['cantidad']}', style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 16, color: a['tipo'] == 'merito' ? const Color(0xFF065F46) : const Color(0xFF991B1B))),
-        ]),
-      )),
-    ]),
-  );
+  Widget _buildSemana(List<dynamic> s) => Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10)]), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Esta Semana', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700)), const SizedBox(height: 12), ...s.map((a) => Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: a['tipo']=='merito'?const Color(0xFFD1FAE5):const Color(0xFFFEE2E2), borderRadius: BorderRadius.circular(16)), child: Row(children: [Icon(a['tipo']=='merito'?Icons.star:Icons.warning, color: a['tipo']=='merito'?const Color(0xFF065F46):const Color(0xFF991B1B)), const SizedBox(width: 12), Expanded(child: Text(a['falta_causa']??'', style: GoogleFonts.poppins(fontWeight: FontWeight.w500))), Text('${a['cantidad']}', style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 16, color: a['tipo']=='merito'?const Color(0xFF065F46):const Color(0xFF991B1B)))])))]));
 
-  Widget _buildPanelCargo(Usuario u) => Container(
-    padding: const EdgeInsets.all(30),
-    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10)]),
-    child: Column(children: [
-      Icon(u.cargo == 'profesor' ? Icons.school : Icons.shield, size: 60, color: const Color(0xFF1E3C72)),
-      const SizedBox(height: 15),
-      Text('Panel de ${u.cargo}', style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w700)),
-      const SizedBox(height: 20),
-      SizedBox(width: double.infinity, child: ElevatedButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificarScreen())), icon: const Icon(Icons.edit_note), label: const Text('Notificar Actividad'), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E3C72), padding: const EdgeInsets.symmetric(vertical: 16)))),
-    ]),
-  );
+  Widget _buildPanelCargo(Usuario u) { return Container(padding: const EdgeInsets.all(30), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)), child: Column(children: [Icon(u.cargo=="profesor"?Icons.school:Icons.shield, size: 60, color: const Color(0xFF1E3C72)), const SizedBox(height: 15), Text("Panel de ${u.cargo}", style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w700)), const SizedBox(height: 20), SizedBox(width: double.infinity, child: ElevatedButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificarScreen())), icon: const Icon(Icons.edit_note), label: const Text("Notificar Actividad")))])); }
 }
