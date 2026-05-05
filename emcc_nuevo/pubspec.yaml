@@ -1,7 +1,7 @@
 name: sistema_escolar
-description: Sistema de Gestion Escolar EMCC
+description: Sistema de Gestion Escolar EMCC - P2P Mesh WiFi+Bluetooth
 publish_to: 'none'
-version: 4.3.2+1
+version: 4.5.3+1
 environment:
   sdk: '>=3.0.0 <4.0.0'
 dependencies:
@@ -14,7 +14,11 @@ dependencies:
   path_provider: ^2.1.1
   mobile_scanner: ^3.5.7
   qr_flutter: ^4.1.0
-  sqflite_common_ffi: ^2.3.4+4
+  permission_handler: ^11.1.0
+  connectivity_plus: ^5.0.2
+  wifi_scan: ^0.4.1
+  network_info_plus: ^4.1.0
+  google_fonts: ^6.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

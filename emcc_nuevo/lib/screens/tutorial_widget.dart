@@ -15,14 +15,14 @@ class _TutorialWidgetState extends State<TutorialWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final steps = widget.esEstudiante 
+    final steps = widget.esEstudiante
         ? ['Tu Código QR', 'Notificar Actividades', 'Menú de Usuario', 'Tus Estadísticas', 'Actividades de la Semana']
         : ['Tu Código QR', 'Notificar Actividades', 'Menú de Usuario', 'Buscador de Estudiantes', 'Panel de Control'];
     
     final icons = [Icons.qr_code, Icons.notifications, Icons.person, Icons.bar_chart, Icons.calendar_today];
     final descriptions = widget.esEstudiante
-        ? ['Toca el botón QR para ver tu código personal.', 'Usa el botón Notificar para registrar méritos o deméritos.', 'Toca tu avatar para acceder a Mi Perfil, Configuración y más.', 'Aquí verás tu acumulado de Méritos, Deméritos y Balance.', 'Aquí aparecen todos los méritos y deméritos que has recibido.']
-        : ['Toca el botón QR para ver tu código personal.', 'Usa el botón Notificar para registrar méritos o deméritos.', 'Toca tu avatar para acceder a Mi Perfil, Configuración y más.', 'Busca estudiantes por nombre, apellidos o CI.', 'Gestiona el sistema desde tu panel de control.'];
+        ? ['Toca el botón QR para ver tu código personal.', 'Usa el botón Notificar para registrar méritos o deméritos.', 'Toca tu avatar para acceder a Mi Perfil y más.', 'Aquí verás tu acumulado de Méritos, Deméritos y Balance.', 'Aquí aparecen todos los méritos y deméritos recibidos.']
+        : ['Toca el botón QR para ver tu código personal.', 'Usa el botón Notificar para registrar méritos o deméritos.', 'Toca tu avatar para acceder a Mi Perfil y más.', 'Busca estudiantes por nombre, apellidos o CI.', 'Gestiona el sistema desde tu panel de control.'];
 
     return Container(
       color: Colors.black54,
@@ -43,15 +43,9 @@ class _TutorialWidgetState extends State<TutorialWidget> {
             Row(children: [
               TextButton(onPressed: _step > 1 ? () => setState(() => _step--) : null, child: const Text('Anterior')),
               const Spacer(),
-              TextButton(onPressed: () => widget.onFinish(), child: const Text('Saltar', style: TextStyle(color: Color(0xFF64748B)))),
+              TextButton(onPressed: widget.onFinish, child: const Text('Saltar', style: TextStyle(color: Color(0xFF64748B)))),
               const SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: () {
-                  if (_step < _totalSteps) { setState(() => _step++); } else { widget.onFinish(); }
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E3C72)),
-                child: Text(_step == _totalSteps ? 'Entendido!' : 'Siguiente'),
-              ),
+              ElevatedButton(onPressed: () { if (_step < _totalSteps) setState(() => _step++); else widget.onFinish(); }, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E3C72)), child: Text(_step == _totalSteps ? 'Entendido!' : 'Siguiente')),
             ]),
           ]),
         ),

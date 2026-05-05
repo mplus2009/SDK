@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/database_service.dart';
-import '../config/app_strings.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -9,111 +8,92 @@ class PerfilScreen extends StatefulWidget {
 }
 
 class _PerfilScreenState extends State<PerfilScreen> {
-  bool _isLoading = true;
-  Map<String, dynamic>? _perfilData;
-  String? _error;
+  bool _loading = true;
+  Map<String, dynamic>? _data;
 
   @override
-  void initState() {
-    super.initState();
-    _cargarPerfil();
-  }
+  void initState() { super.initState(); _load(); }
 
-  Future<void> _cargarPerfil() async {
-    setState(() { _isLoading = true; _error = null; });
-    final response = await DatabaseService.getPerfil();
+  Future<void> _load() async {
+    final r = await DatabaseService.getPerfil();
     if (!mounted) return;
-    if (response['success'] == true) {
-      setState(() { _perfilData = response; _isLoading = false; });
-    } else {
-      setState(() { _error = response['message'] ?? AppStrings.error; _isLoading = false; });
-    }
+    setState(() { _data = r; _loading = false; });
   }
 
   @override
   Widget build(BuildContext context) {
-    final usuario = DatabaseService.usuario;
-    final perfil = _perfilData?['perfil'] as Map<String, dynamic>?;
-    final stats = _perfilData?['stats'] as Map<String, dynamic>?;
-    final ultimas = (_perfilData?['ultimas_actividades'] as List<dynamic>?) ?? [];
+    final u = DatabaseService.usuario;
+    final stats = _data?['stats'] as Map<String, dynamic>?;
+    final ultimas = (_data?['ultimas_actividades'] as List<dynamic>?) ?? [];
     final balance = (stats?['meritos'] ?? 0) - (stats?['demeritos'] ?? 0);
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.myProfile)),
-      body: _isLoading
+      appBar: AppBar(title: const Text('Mi Perfil')),
+      body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text(_error!, style: const TextStyle(color: Colors.red)), const SizedBox(height: 15), ElevatedButton(onPressed: _cargarPerfil, child: const Text(AppStrings.retry))]))
-              : RefreshIndicator(
-                  onRefresh: _cargarPerfil,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(children: [
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
-                        child: Column(children: [
-                          Container(width: 90, height: 90, decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF667EEA), Color(0xFF764BA2)]), shape: BoxShape.circle), child: const Icon(Icons.person, size: 45, color: Colors.white)),
-                          const SizedBox(height: 15),
-                          Text('${perfil?['nombre'] ?? usuario?.nombre ?? ''} ${perfil?['apellidos'] ?? usuario?.apellidos ?? ''}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFF1E3C72))),
-                          const SizedBox(height: 5),
-                          Container(padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5), decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(20)), child: Text(perfil?['cargo'] ?? usuario?.cargo ?? '', style: const TextStyle(color: Color(0xFF64748B)))),
-                          if (usuario?.cargo == 'estudiante') ...[
-                            const SizedBox(height: 20),
-                            Row(children: [
-                              _statBox('${stats?['meritos'] ?? 0}', AppStrings.meritos, const Color(0xFF10B981), Icons.emoji_events),
-                              const SizedBox(width: 10),
-                              _statBox('${stats?['demeritos'] ?? 0}', AppStrings.demeritos, const Color(0xFFEF4444), Icons.warning_amber),
-                              const SizedBox(width: 10),
-                              _statBox('$balance', AppStrings.balance, balance >= 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444), Icons.balance),
-                            ]),
-                            const SizedBox(height: 15),
-                            _mensajeEstado(balance),
-                          ],
-                        ]),
-                      ),
+          : RefreshIndicator(
+              onRefresh: _load,
+              child: ListView(padding: const EdgeInsets.all(16), children: [
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
+                  child: Column(children: [
+                    const CircleAvatar(radius: 45, backgroundColor: Color(0xFF667EEA), child: Icon(Icons.person, size: 45, color: Colors.white)),
+                    const SizedBox(height: 15),
+                    Text(u?.nombreCompleto ?? '', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFF1E3C72))),
+                    Container(margin: const EdgeInsets.only(top: 5), padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5), decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(20)), child: Text(u?.cargo ?? '', style: const TextStyle(color: Color(0xFF64748B)))),
+                    if (u?.cargo == 'estudiante') ...[
                       const SizedBox(height: 20),
-                      _ultimasActividades(ultimas),
+                      Row(children: [
+                        _box('${stats?['meritos']??0}', 'Méritos', Colors.green),
+                        const SizedBox(width: 10),
+                        _box('${stats?['demeritos']??0}', 'Deméritos', Colors.red),
+                        const SizedBox(width: 10),
+                        _box('$balance', 'Balance', balance >= 0 ? Colors.green : Colors.red),
+                      ]),
+                      const SizedBox(height: 15),
+                      _mensaje(balance),
+                    ],
+                  ]),
+                ),
+                const SizedBox(height: 20),
+                if (ultimas.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Text('Últimas Actividades', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 15),
+                      ...ultimas.map((act) {
+                        final esMerito = act['tipo'] == 'merito';
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(color: esMerito ? const Color(0xFFD1FAE5) : const Color(0xFFFEE2E2), borderRadius: BorderRadius.circular(12)),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(act['falta_causa'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 4),
+                            Text('Notificado por: ${act['notificador'] ?? 'Sistema'}', style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                            Text('${act['fecha']} - ${act['hora']?.toString().substring(0,5) ?? ""}', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                            Align(alignment: Alignment.centerRight, child: Text('${esMerito ? "+" : "-"}${act['cantidad']}', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18, color: esMerito ? Colors.green : Colors.red))),
+                          ]),
+                        );
+                      }),
                     ]),
                   ),
-                ),
-    );
-  }
-
-  Widget _statBox(String value, String label, Color color, IconData icon) {
-    return Expanded(child: Container(padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(16)), child: Column(children: [Icon(icon, size: 28, color: color), const SizedBox(height: 8), Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: color)), Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)))])));
-  }
-
-  Widget _mensajeEstado(int balance) {
-    Color bg; IconData icon; String title; String msg;
-    if (balance > 0) { bg = const Color(0xFF10B981); icon = Icons.emoji_events; title = AppStrings.excellent; msg = AppStrings.excellentMsg; }
-    else if (balance < 0) { bg = const Color(0xFFEF4444); icon = Icons.warning_amber; title = AppStrings.attention; msg = AppStrings.attentionMsg; }
-    else { bg = const Color(0xFFF59E0B); icon = Icons.balance; title = AppStrings.balanced; msg = AppStrings.balancedMsg; }
-    return Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(gradient: LinearGradient(colors: [bg, bg.withOpacity(0.8)]), borderRadius: BorderRadius.circular(20)), child: Column(children: [Icon(icon, size: 40, color: Colors.white), const SizedBox(height: 10), Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)), const SizedBox(height: 5), Text(msg, style: const TextStyle(color: Colors.white70, fontSize: 14))]));
-  }
-
-  Widget _ultimasActividades(List<dynamic> actividades) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Row(children: [Icon(Icons.history, color: Color(0xFF667EEA)), SizedBox(width: 8), Text(AppStrings.lastActivities, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF1E3C72)))]),
-        const SizedBox(height: 16),
-        if (actividades.isEmpty)
-          const Center(child: Padding(padding: EdgeInsets.all(20), child: Text(AppStrings.noRecentActivities, style: TextStyle(color: Color(0xFF94A3B8)))))
-        else
-          ...actividades.map((act) {
-            final esMerito = act['tipo'] == 'merito';
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: esMerito ? const Color(0xFFD1FAE5) : const Color(0xFFFEE2E2), borderRadius: BorderRadius.circular(12)),
-              child: Row(children: [
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(act['falta_causa'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1E293B))), const SizedBox(height: 2), Text('${act['fecha'] ?? ''} - ${act['notificador'] ?? ''}', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)))])),
-                Text('${esMerito ? "+" : "-"}${act['cantidad']}', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18, color: esMerito ? const Color(0xFF065F46) : const Color(0xFF991B1B))),
+                ],
               ]),
-            );
-          }),
-      ]),
+            ),
     );
+  }
+
+  Widget _box(String v, String l, Color c) {
+    return Expanded(child: Container(padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: c.withOpacity(0.1), borderRadius: BorderRadius.circular(16)), child: Column(children: [Text(v, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: c)), Text(l, style: const TextStyle(fontSize: 12))])));
+  }
+
+  Widget _mensaje(int b) {
+    final bg = b > 0 ? Colors.green : b < 0 ? Colors.red : Colors.orange;
+    final icon = b > 0 ? Icons.emoji_events : b < 0 ? Icons.warning : Icons.balance;
+    return Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(gradient: LinearGradient(colors: [bg, bg.withOpacity(0.7)]), borderRadius: BorderRadius.circular(20)), child: Row(children: [Icon(icon, size: 40, color: Colors.white), const SizedBox(width: 15), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(b > 0 ? '¡Excelente!' : b < 0 ? 'Atención' : 'Equilibrado', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)), Text(b > 0 ? 'Más méritos que deméritos' : b < 0 ? 'Más deméritos que méritos' : 'Méritos y deméritos igualados', style: const TextStyle(color: Colors.white70))]))]));
   }
 }
