@@ -136,7 +136,7 @@ class _NotificarScreenState extends State<NotificarScreen> {
         TextField(controller: _obs, decoration: const InputDecoration(labelText: 'Observaciones', border: OutlineInputBorder())),
         const SizedBox(height: 20),
         // Botón enviar
-        SizedBox(width: double.infinity, child: ElevatedButton.icon(onPressed: puede && !_sending ? () async { setState(() => _sending = true); await DatabaseService.enviarNotificacion({'destinatarios': _dest, 'actividades': _acts, 'fecha': _fc.text, 'hora': _hc.text, 'id_star': '${DatabaseService.usuario?.id}', 'cargo_notificador': DatabaseService.usuario?.cargo}); setState(() { _sending = false; _dest = []; _acts = []; }); } : null, icon: _sending ? const CircularProgressIndicator() : const Icon(Icons.send), label: const Text('Enviar'))),
+        SizedBox(width: double.infinity, child: ElevatedButton.icon(onPressed: puede && !_sending ? () async { setState(() => _sending = true); final data = {"destinatarios": _dest, "actividades": _acts, "fecha": _fc.text, "hora": _hc.text, "id_star": "${DatabaseService.usuario?.id}", "cargo_notificador": DatabaseService.usuario?.cargo}; await DatabaseService.enviarNotificacion(data); setState(() { _sending = false; _dest = []; _acts = []; }); } : null, icon: _sending ? const CircularProgressIndicator() : const Icon(Icons.send), label: const Text("Enviar"))),
       ]),
     );
   }

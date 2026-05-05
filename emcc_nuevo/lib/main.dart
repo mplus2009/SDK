@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'services/database_service.dart';
-import 'screens/login_screen.dart';
+import 'services/mesh_service.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  // Iniciar servidor mesh en segundo plano
+  MeshService().startServer();
   runApp(const EMCCApp());
 }
 
@@ -17,12 +20,7 @@ class EMCCApp extends StatelessWidget {
     return MaterialApp(
       title: 'EMCC Digital',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        primaryColor: const Color(0xFF1E3C72),
-        scaffoldBackgroundColor: const Color(0xFFF5F7FA),
-        appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF1E3C72), foregroundColor: Colors.white, elevation: 0),
-      ),
+      theme: ThemeData(useMaterial3: true, primaryColor: const Color(0xFF1E3C72)),
       home: const SplashScreen(),
     );
   }
@@ -34,57 +32,28 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _fade, _scale;
-
+class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(duration: const Duration(seconds: 2), vsync: this);
-    _fade = Tween(begin: 0.0, end: 1.0).animate(_ctrl);
-    _scale = Tween(begin: 0.8, end: 1.0).animate(_ctrl);
-    _ctrl.forward();
-    _iniciar();
+    Future.delayed(const Duration(seconds: 2), _go);
   }
 
-  @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
-
-  Future<void> _iniciar() async {
+  Future<void> _go() async {
     try {
       await DatabaseService.database;
       await DatabaseService.initSession();
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (!mounted) return;
-      if (DatabaseService.isLoggedIn) {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardScreen()));
-      } else {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
-      }
-    } catch (e) {
-      if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
-    }
+    } catch (_) {}
+    if (!mounted) return;
+    Navigator.pushReplacement(context, MaterialPageRoute(
+      builder: (_) => DatabaseService.isLoggedIn ? const DashboardScreen() : const LoginScreen(),
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF1E3C72), Color(0xFF2A5298)])),
-        child: Center(
-          child: FadeTransition(opacity: _fade, child: ScaleTransition(scale: _scale, child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Container(width: 100, height: 100, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(25)), child: const Icon(Icons.school, size: 60, color: Colors.white)),
-            const SizedBox(height: 30),
-            const Text('EMCC DIGITAL', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 40),
-            const CircularProgressIndicator(color: Colors.white),
-            const SizedBox(height: 20),
-            const Text('Cargando...', style: TextStyle(color: Colors.white70)),
-          ]))),
-        ),
-      ),
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
     );
   }
 }

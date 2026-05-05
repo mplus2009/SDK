@@ -1,7 +1,7 @@
 name: sistema_escolar
 description: Sistema de Gestion Escolar EMCC
 publish_to: 'none'
-version: 4.6.0+1
+version: 4.8.1+1
 environment:
   sdk: '>=3.0.0 <4.0.0'
 dependencies:
@@ -16,6 +16,9 @@ dependencies:
   qr_flutter: ^4.1.0
   google_fonts: ^6.1.0
   flutter_animate: ^4.5.0
+  shelf: ^1.4.1
+  shelf_router: ^1.1.4
+  http: ^1.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

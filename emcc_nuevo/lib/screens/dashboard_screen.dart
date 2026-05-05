@@ -50,7 +50,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final r = await DatabaseService.getDashboard();
     if (!mounted) return;
     setState(() { _data = r; _loading = false; });
-    _mesh.startSearch();
+    _mesh.searchDevices();
   }
 
   Future<void> _search(String q) async {
@@ -115,6 +115,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case MeshStatus.disconnected: icon = Icons.signal_wifi_off; color = Colors.grey; label = 'Sin red'; break;
       case MeshStatus.searching: icon = Icons.wifi_find; color = Colors.orange; label = 'Buscando...'; break;
       case MeshStatus.connected: icon = Icons.signal_wifi_4_bar; color = Colors.green; label = '${_foundDevices.length} disp.'; break;
+      case MeshStatus.serverOn: icon = Icons.wifi_tethering; color = Colors.teal; label = "Servidor ON"; break;
       case MeshStatus.sending: icon = Icons.signal_wifi_statusbar_4_bar; color = Colors.blue; label = 'Enviando...'; break;
     }
     return Padding(
